@@ -1679,8 +1679,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="-173"/>
-        <source>Enter an Orbitcoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation type="unfinished">Enter an Orbitcoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>Enter an Orbitcoin address (e.g. oSCxdRT82vywJoEgpP3gYH6bfmsJtd5eSL)</source>
+        <translation type="unfinished">Enter an Orbitcoin address (e.g. oSCxdRT82vywJoEgpP3gYH6bfmsJtd5eSL)</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1823,7 +1823,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+18"/>
-        <source>The address to send the payment to  (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
+        <source>The address to send the payment to  (e.g. oSCxdRT82vywJoEgpP3gYH6bfmsJtd5eSL)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1853,8 +1853,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="+1"/>
-        <source>Enter an Orbitcoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation>Enter an Orbitcoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>Enter an Orbitcoin address (e.g. oSCxdRT82vywJoEgpP3gYH6bfmsJtd5eSL)</source>
+        <translation>Enter an Orbitcoin address (e.g. oSCxdRT82vywJoEgpP3gYH6bfmsJtd5eSL)</translation>
     </message>
 </context>
 <context>
@@ -1877,8 +1877,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+18"/>
-        <source>The address to sign the message with (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation>The address to sign the message with (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>The address to sign the message with (e.g. oSCxdRT82vywJoEgpP3gYH6bfmsJtd5eSL)</source>
+        <translation>The address to sign the message with (e.g. oSCxdRT82vywJoEgpP3gYH6bfmsJtd5eSL)</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1941,8 +1941,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+21"/>
-        <source>The address the message was signed with (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation>The address the message was signed with (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>The address the message was signed with (e.g. oSCxdRT82vywJoEgpP3gYH6bfmsJtd5eSL)</source>
+        <translation>The address the message was signed with (e.g. oSCxdRT82vywJoEgpP3gYH6bfmsJtd5eSL)</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -1957,8 +1957,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../signverifymessagedialog.cpp" line="+27"/>
         <location line="+3"/>
-        <source>Enter an Orbitcoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation>Enter an Orbitcoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
+        <source>Enter an Orbitcoin address (e.g. oSCxdRT82vywJoEgpP3gYH6bfmsJtd5eSL)</source>
+        <translation>Enter an Orbitcoin address (e.g. oSCxdRT82vywJoEgpP3gYH6bfmsJtd5eSL)</translation>
     </message>
     <message>
         <location line="-2"/>
