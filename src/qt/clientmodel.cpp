@@ -36,7 +36,7 @@ ClientModel::~ClientModel()
 
 double ClientModel::getDifficulty(bool PoS) {
 
-    return(GetDifficulty(GetLastBlockIndex(pindexBest, PoS)));
+    return(GetDifficulty(GetPrevBlockIndex(pindexBest, 0, PoS)));
 }
 
 int ClientModel::getNumConnections() const

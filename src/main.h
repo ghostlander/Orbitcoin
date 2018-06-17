@@ -173,7 +173,7 @@ bool SetBestChain(CBlockIndex* pindexNew);
 bool ConnectBestBlock();
 CBlockIndex * InsertBlockIndex(uint256 hash);
 uint256 WantedByOrphan(const CBlock* pblockOrphan);
-const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfStake);
+const CBlockIndex *GetPrevBlockIndex(const CBlockIndex *pindex, uint nRange, bool fProofOfStake);
 void StakeMiner(CWallet *pwallet);
 void ResendWalletTransactions(bool fForce=false);
 

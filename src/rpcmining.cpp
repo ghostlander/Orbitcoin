@@ -25,14 +25,19 @@ Value getmininginfo(const Array& params, bool fHelp)
         nLastWalletStakeTime = GetTime();
     }
 
+    const CBlockIndex *pindexLastPoW = GetPrevBlockIndex(pindexBest, 0, false);
+    const CBlockIndex *pindexLastPoS = GetPrevBlockIndex(pindexBest, 0, true);
+
     Object obj;
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("currentblocksize",(boost::uint64_t)nLastBlockSize));
     obj.push_back(Pair("currentblocktx",(boost::uint64_t)nLastBlockTx));
-    obj.push_back(Pair("powdifficulty", (float)GetDifficulty()));
-    obj.push_back(Pair("posdifficulty", (float)GetDifficulty(GetLastBlockIndex(pindexBest, true))));
-    obj.push_back(Pair("powreward",     (float)(GetProofOfWorkReward(GetLastBlockIndex(pindexBest, false)->nHeight, (int64)NULL))/COIN));
-    obj.push_back(Pair("posreward",     (float)(GetProofOfStakeReward(GetLastBlockIndex(pindexBest, true)->nHeight, (int64)NULL))/COIN));
+    obj.push_back(Pair("powdifficulty", (float)GetDifficulty(pindexLastPoW)));
+    obj.push_back(Pair("posdifficulty", (float)GetDifficulty(pindexLastPoS)));
+    obj.push_back(Pair("powreward",
+      (float)GetProofOfWorkReward(pindexLastPoW ? pindexLastPoW->nHeight : 1, 0) / (float)COIN));
+    obj.push_back(Pair("posreward",
+      (float)GetProofOfStakeReward(pindexLastPoS ? pindexLastPoS->nHeight : 1, 0) / (float)COIN));
     obj.push_back(Pair("networkhashps", getnetworkhashps(params, false)));
     obj.push_back(Pair("stakeweight",   (boost::uint64_t)nTotalStakeWeight));
     obj.push_back(Pair("minweightinputs", (boost::uint64_t)nMinWeightInputs));
