@@ -397,33 +397,25 @@ Value getnetworkhashps(const Array& params, bool fHelp) {
     if(fHelp || (params.size() > 1))
       throw(runtime_error(
         "getnetworkhashps [blocks]\n"
-        "Calculates estimated network hashes per second based on the last 50 PoW blocks.\n"
+        "Estimates number of network hashes per second over the last 50 PoW blocks.\n"
         "Pass in [blocks] to override the default value."));
 
-    int lookup = (params.size() > 0) ? params[0].get_int() : 50;
+    int nRange = (params.size() > 0) ? params[0].get_int() : 50;
 
     /* The genesis block only */
     if(!pindexBest) return(0);
+    if(!pindexBest->pprev) return(0);
 
     /* Range limit */
-    if(lookup <= 0) lookup = 50;
+    if(nRange <= 0) nRange = 50;
 
-    int i;
-    CBlockIndex* pindexPrev = pindexBest;
-    for(i = 0; (i < lookup); i++) {
-        /* Hit the genesis block */
-        if(!pindexPrev->pprev) {
-            lookup = i + 1;
-            break;
-        }
-        /* Move one block back */
-        pindexPrev = pindexPrev->pprev;
-        /* Don't count PoS blocks */
-        if(pindexPrev->IsProofOfStake()) i--;
-    }
+    const CBlockIndex *pindexTop = GetPrevBlockIndex(pindexBest, 0, false);
+    if(!pindexTop) return(0);
 
-    double timeDiff = pindexBest->GetBlockTime() - pindexPrev->GetBlockTime();
-    double timePerBlock = timeDiff / lookup;
+    const CBlockIndex *pindexBottom = GetPrevBlockIndex(pindexTop, nRange, false);
+    if(!pindexBottom) return(0);
+
+    double timePerBlock = (pindexTop->nTime - pindexBottom->nTime) / nRange;
 
     return((boost::int64_t)(((double)GetDifficulty() * pow(2.0, 32)) / timePerBlock));
 }
