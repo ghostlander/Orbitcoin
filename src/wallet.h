@@ -193,8 +193,8 @@ public:
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false, std::string strTxComment = "");
     std::string SendMoneyToDestination(const CTxDestination &address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false, std::string strTxComment = "");
 
-    bool NewKeyPool();
-    bool TopUpKeyPool(unsigned int nSize = 0);
+    bool NewKeyPool(uint nSize = 0);
+    bool TopUpKeyPool(uint nSize = 0);
     int64 AddReserveKey(const CKeyPool& keypool);
     void ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool);
     void KeepKey(int64 nIndex);

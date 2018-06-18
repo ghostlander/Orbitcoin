@@ -1387,29 +1387,58 @@ Value backupwallet(const Array& params, bool fHelp)
 }
 
 
-Value keypoolrefill(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() > 1)
-        throw runtime_error(
-            "keypoolrefill [new-size]\n"
-            "Fills the keypool."
-            + HelpRequiringPassphrase());
+Value keypoolrefill(const Array &params, bool fHelp) {
 
-    unsigned int nSize = max(GetArg("-keypool", 100), 0LL);
-    if (params.size() > 0) {
-        if (params[0].get_int() < 0)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size");
-        nSize = (unsigned int) params[0].get_int();
+    if(fHelp || (params.size() > 1))
+      throw(runtime_error(
+        "keypoolrefill [new-size]\n"
+        "Adds new reserved keys to the key pool up to its size."
+        + HelpRequiringPassphrase()));
+
+    uint nSize = (uint)GetArg("-keypool", 100);
+
+    if(params.size() > 0) {
+        if(params[0].get_int() < 0)
+          throw(JSONRPCError(RPC_INVALID_PARAMETER, "Invalid key pool size"));
+        nSize = (uint)params[0].get_int();
     }
 
     EnsureWalletIsUnlocked();
 
     pwalletMain->TopUpKeyPool(nSize);
 
-    if (pwalletMain->GetKeyPoolSize() < nSize)
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
+    if(pwalletMain->GetKeyPoolSize() < nSize)
+      throw(JSONRPCError(RPC_WALLET_ERROR, "Error while refreshing the key pool"));
 
-    return Value::null;
+    return(Value::null);
+}
+
+
+Value keypoolreset(const Array &params, bool fHelp) {
+
+    if(fHelp || (params.size() > 1))
+      throw(runtime_error(
+        "keypoolreset [new-size]\n"
+        "Removes any remaining keys from the key pool, labels them as used,\n"
+        "and adds new reserved keys to the key pool up to its size."
+        + HelpRequiringPassphrase()));
+
+    uint nSize = (uint)GetArg("-keypool", 100);
+
+    if(params.size() > 0) {
+        if(params[0].get_int() < 0)
+          throw(JSONRPCError(RPC_INVALID_PARAMETER, "Invalid key pool size"));
+        nSize = (uint)params[0].get_int();
+    }
+
+    EnsureWalletIsUnlocked();
+
+    pwalletMain->NewKeyPool(nSize);
+
+    if(pwalletMain->GetKeyPoolSize() < nSize)
+      throw(JSONRPCError(RPC_WALLET_ERROR, "Error while refreshing the key pool"));
+
+    return(Value::null);
 }
 
 

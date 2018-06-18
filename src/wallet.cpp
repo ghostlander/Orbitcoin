@@ -1986,64 +1986,77 @@ bool GetWalletFile(CWallet* pwallet, string &strWalletFileOut)
     return true;
 }
 
-//
-// Mark old keypool keys as used,
-// and generate all new keys
-//
-bool CWallet::NewKeyPool()
-{
+/* Generates a whole new set of reserved keys
+ * while labelling the old reserved keys as used */
+bool CWallet::NewKeyPool(uint nSize) {
+    uint nIndex, nKeys, i;
+
     {
         LOCK(cs_wallet);
         CWalletDB walletdb(strWalletFile);
-        BOOST_FOREACH(int64 nIndex, setKeyPool)
-            walletdb.ErasePool(nIndex);
-        setKeyPool.clear();
 
-        if (IsLocked())
-            return false;
-
-        int64 nKeys = max(GetArg("-keypool", 100), (int64)0);
-        for (int i = 0; i < nKeys; i++)
-        {
-            int64 nIndex = i+1;
-            walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey()));
-            setKeyPool.insert(nIndex);
+        nIndex = *(setKeyPool.begin());
+        for(i = 0; i < setKeyPool.size(); i++) {
+            walletdb.ErasePool(nIndex + i);
+            printf("CWallet::NewKeyPool() : key pool size %u retired a key index %u\n",
+              (uint)setKeyPool.size(), nIndex + i);
         }
-        printf("CWallet::NewKeyPool wrote %" PRI64d " new keys\n", nKeys);
+
+        setKeyPool.clear();
+        printf("CWallet::NewKeyPool() : key pool cleared size %u\n",
+          (uint)setKeyPool.size());
+
+        if(IsLocked()) return(false);
+
+        if(nSize > 0) nKeys = nSize;
+        else nKeys = (uint)GetArg("-keypool", 100);
+
+        /* Should be sufficient for any particular purpose */
+        if(nKeys >> 16) nKeys = 0xFFFF;
+
+        for(i = 0; i < nKeys; i++) {
+            walletdb.WritePool(i + 1, CKeyPool(GenerateNewKey()));
+            setKeyPool.insert(i + 1);
+            printf("CWallet::NewKeyPool() : key pool size %u got a new key index %u\n",
+              (uint)setKeyPool.size(), i + 1);
+        }
+
+        printf("CWallet::NewKeyPool() : %u new keys written\n", nKeys);
     }
-    return true;
+
+    return(true);
 }
 
-bool CWallet::TopUpKeyPool(unsigned int nSize)
-{
+/* Generates a number of reserved keys to match the key pool size */
+bool CWallet::TopUpKeyPool(uint nSize) {
+    uint nIndex, nKeys;
+
     {
         LOCK(cs_wallet);
 
-        if (IsLocked())
-            return false;
+        if(IsLocked()) return(false);
 
         CWalletDB walletdb(strWalletFile);
 
-        // Top up key pool
-        unsigned int nTargetSize;
-        if (nSize > 0)
-            nTargetSize = nSize;
-        else
-            nTargetSize = max(GetArg("-keypool", 100), 0LL);
+        if(nSize > 0) nKeys = nSize;
+        else nKeys = (uint)GetArg("-keypool", 100);
 
-        while (setKeyPool.size() < (nTargetSize + 1))
-        {
-            int64 nEnd = 1;
-            if (!setKeyPool.empty())
-                nEnd = *(--setKeyPool.end()) + 1;
-            if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey())))
-                throw runtime_error("TopUpKeyPool() : writing generated key failed");
-            setKeyPool.insert(nEnd);
-            printf("keypool added key %" PRI64d ", size=%" PRIszu "\n",
-              nEnd, setKeyPool.size());
+        /* Should be sufficient for any particular purpose */
+        if(nKeys >> 16) nKeys = 0xFFFF;
+
+        while(setKeyPool.size() < (nKeys + 1)) {
+            nIndex = 1;
+            if(!setKeyPool.empty())
+              nIndex = *(--setKeyPool.end()) + 1;
+            if(!walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey())))
+              throw(runtime_error("CWallet::TopUpKeyPool() : failed to write a generated key"));
+            setKeyPool.insert(nIndex);
+            printf("CWallet::TopUpKeyPool() : key pool size %u got a new key index %u\n",
+              (uint)setKeyPool.size(), nIndex);
         }
     }
-    return true;
+
+    return(true);
 }
 
 void CWallet::ReserveKeyFromKeyPool(int64& nIndex, CKeyPool& keypool)
