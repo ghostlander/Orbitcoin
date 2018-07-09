@@ -2,7 +2,7 @@
  * Copyright (c) 2009 Colin Percival, 2011 ArtForz
  * Copyright (c) 2012 Andrew Moon (floodyberry)
  * Copyright (c) 2012 Samuel Neves <sneves@dei.uc.pt>
- * Copyright (c) 2014-2016 John Doering <ghostlander@phoenixcoin.org>
+ * Copyright (c) 2014-2018 John Doering <ghostlander@phoenixcoin.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 #include "neoscrypt.h"
 
 
-#ifdef SHA256
+#ifdef NEOSCRYPT_SHA256
 
 /* SHA-256 */
 
@@ -274,12 +274,12 @@ void neoscrypt_pbkdf2_sha256(const uchar *password, uint password_len,
     }
 }
 
-#endif /* SHA256 */
+#endif /* NEOSCRYPT_SHA256 */
 
 
 /* NeoScrypt */
 
-#ifdef ASM
+#ifdef NEOSCRYPT_ASM
 
 extern void neoscrypt_copy(void *dstp, const void *srcp, uint len);
 extern void neoscrypt_erase(void *dstp, uint len);
@@ -446,26 +446,17 @@ void neoscrypt_erase(void *dstp, uint len) {
     }
 }
 
-/* 32-bit / 64-bit optimised XOR engine */
+/* Fail safe bytewise XOR engine */
 void neoscrypt_xor(void *dstp, const void *srcp, uint len) {
-    size_t *dst = (size_t *) dstp;
-    size_t *src = (size_t *) srcp;
-    uint i, tail;
+    uchar *dst = (uchar *) dstp;
+    uchar *src = (uchar *) srcp;
+    uint i;
 
-    for(i = 0; i < (len / sizeof(size_t)); i++)
+    for(i = 0; i < len; i++)
       dst[i] ^= src[i];
-
-    tail = len & (sizeof(size_t) - 1);
-    if(tail) {
-        uchar *dstb = (uchar *) dstp;
-        uchar *srcb = (uchar *) srcp;
-
-        for(i = len - tail; i < len; i++)
-          dstb[i] ^= srcb[i];
-    }
 }
 
-#endif /* ASM */
+#endif /* NEOSCRYPT_ASM */
 
 
 /* BLAKE2s */
@@ -500,7 +491,7 @@ static const uint blake2s_IV[8] = {
     0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19
 };
 
-#ifdef ASM
+#ifdef NEOSCRYPT_ASM
 
 extern void blake2s_compress(blake2s_state *S);
 
@@ -1909,7 +1900,7 @@ static void blake2s_compress(blake2s_state *S) {
     S->h[7] ^= v[7] ^ v[15];
 }
 
-#endif /* ASM */
+#endif /* NEOSCRYPT_ASM */
 
 static void blake2s_update(blake2s_state *S, const uchar *input,
   uint input_size) {
@@ -1981,7 +1972,7 @@ void neoscrypt_blake2s(const void *input, const uint input_size,
     neoscrypt_copy(output, S, output_size);
 }
 
-#ifndef OPT
+#ifndef NEOSCRYPT_OPT
 
 #define FASTKDF_BUFFER_SIZE 256U
 
@@ -2079,7 +2070,7 @@ void neoscrypt_fastkdf(const uchar *password, uint password_len,
 
 #else
 
-#ifdef ASM
+#ifdef NEOSCRYPT_ASM
 
 extern void neoscrypt_fastkdf_opt(const uchar *password, const uchar *salt,
   uchar *output, uint mode);
@@ -2176,12 +2167,12 @@ void neoscrypt_fastkdf_opt(const uchar *password, const uchar *salt,
     }
 }
 
-#endif /* ASM */
+#endif /* NEOSCRYPT_ASM */
 
-#endif /* !(OPT) */
+#endif /* !(NEOSCRYPT_OPT) */
 
 
-#ifndef ASM
+#ifndef NEOSCRYPT_ASM
 
 /* Configurable optimised block mixer */
 static void neoscrypt_blkmix(uint *X, uint *Y, uint r, uint mixmode) {
@@ -2321,7 +2312,7 @@ void neoscrypt(const uchar *password, uchar *output, uint profile) {
 
         default:
         case(0x0):
-#ifdef OPT
+#ifdef NEOSCRYPT_OPT
             neoscrypt_fastkdf_opt(password, password, (uchar *) X, 0);
 #else
             neoscrypt_fastkdf(password, 80, password, 80, 32,
@@ -2329,7 +2320,7 @@ void neoscrypt(const uchar *password, uchar *output, uint profile) {
 #endif
             break;
 
-#ifdef SHA256
+#ifdef NEOSCRYPT_SHA256
         case(0x1):
             neoscrypt_pbkdf2_sha256(password, 80, password, 80, 1,
               (uchar *) X, r * 2 * BLOCK_SIZE);
@@ -2387,7 +2378,7 @@ void neoscrypt(const uchar *password, uchar *output, uint profile) {
 
         default:
         case(0x0):
-#ifdef OPT
+#ifdef NEOSCRYPT_OPT
             neoscrypt_fastkdf_opt(password, (uchar *) X, output, 1);
 #else
             neoscrypt_fastkdf(password, 80, (uchar *) X,
@@ -2395,7 +2386,7 @@ void neoscrypt(const uchar *password, uchar *output, uint profile) {
 #endif
             break;
 
-#ifdef SHA256
+#ifdef NEOSCRYPT_SHA256
         case(0x1):
             neoscrypt_pbkdf2_sha256(password, 80, (uchar *) X,
               r * 2 * BLOCK_SIZE, 1, output, 32);
@@ -2406,10 +2397,10 @@ void neoscrypt(const uchar *password, uchar *output, uint profile) {
 
 }
 
-#endif /* !(ASM) */
+#endif /* !(NEOSCRYPT_ASM) */
 
 
-#ifndef ASM
+#ifndef NEOSCRYPT_ASM
 uint cpu_vec_exts() {
 
     /* No assembly, no extensions */

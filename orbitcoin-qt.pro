@@ -7,7 +7,7 @@ DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 CONFIG += thread
 CONFIG += static
-QMAKE_CFLAGS += -DSHA256 -DASM -DOPT
+QMAKE_CFLAGS += -DNEOSCRYPT_SHA256 -DNEOSCRYPT_ASM -DNEOSCRYPT_OPT
 
 greaterThan(QT_MAJOR_VERSION, 4): {
     QT += widgets
@@ -48,7 +48,7 @@ contains(RELEASE_I386, 1) {
 # use: qmake RELEASE_AMD64=1
 contains(RELEASE_AMD64, 1) {
     # Mac: optimised 64-bit x86
-    macx:QMAKE_CFLAGS += -DMOVQ_FIX -arch x86_64 -fomit-frame-pointer -mdynamic-no-pic -I/usr/local/amd64/include
+    macx:QMAKE_CFLAGS += -DNEOSCRYPT_MOVQ_FIX -arch x86_64 -fomit-frame-pointer -mdynamic-no-pic -I/usr/local/amd64/include
     macx:QMAKE_CXXFLAGS += -arch x86_64 -fomit-frame-pointer -mdynamic-no-pic -I/usr/local/amd64/include
     macx:QMAKE_LFLAGS += -arch x86_64 -L/usr/local/amd64/lib
     # Mac: 10.8+ compatibility

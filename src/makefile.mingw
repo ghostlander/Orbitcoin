@@ -105,10 +105,10 @@ obj/%.o: %.cpp $(HEADERS)
 	$(CXX) -c $(CFLAGS) -o $@ $<
 
 obj/neoscrypt.o: neoscrypt.c
-	$(CC) $(CFLAGS) -DSHA256 -DASM -DOPT -c -o $@ $^
+	$(CC) $(CFLAGS) -DNEOSCRYPT_SHA256 -DNEOSCRYPT_ASM -DNEOSCRYPT_OPT -c -o $@ $^
 
 obj/neoscrypt_asm.o: neoscrypt_asm.S
-	$(CC) -c -DSHA256 -DASM -DOPT -o $@ $^
+	$(CC) -c -DNEOSCRYPT_SHA256 -DNEOSCRYPT_ASM -DNEOSCRYPT_OPT -o $@ $^
 
 obj/scrypt-x86.o: scrypt-x86.S
 	$(CC) -c -MMD -o $@ $<
