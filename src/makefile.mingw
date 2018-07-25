@@ -90,15 +90,20 @@ OBJS= \
     obj/pbkdf2.o \
     obj/scrypt.o \
     obj/scrypt-x86.o \
-    obj/scrypt-x86_64.o
+    obj/scrypt-x86_64.o \
+    obj/ecies.o \
+    obj/secure.o \
+    obj/kdf.o
 
 all: orbitcoind.exe
 
 LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
+
 leveldb/libleveldb.a:
 	cd leveldb; make; cd ..
+
 obj/txdb-leveldb.o: leveldb/libleveldb.lib
 
 obj/%.o: %.cpp $(HEADERS)
@@ -115,6 +120,15 @@ obj/scrypt-x86.o: scrypt-x86.S
 
 obj/scrypt-x86_64.o: scrypt-x86_64.S
 	$(CC) -c -MMD -o $@ $<
+
+obj/ecies.o: ecies/ecies.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+obj/secure.o: ecies/secure.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+obj/kdf.o: ecies/kdf.c
+	$(CC) $(CFLAGS) -c -o $@ $^
 
 orbitcoind.exe: $(OBJS:obj/%=obj/%)
 	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)

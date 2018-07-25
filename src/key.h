@@ -96,6 +96,8 @@ public:
     std::vector<unsigned char> Raw() const {
         return vchPubKey;
     }
+
+    void EncryptData(const std::vector<uchar> &plaindata, std::vector<uchar> &encdata);
 };
 
 
@@ -157,6 +159,10 @@ public:
     bool VerifyCompact(uint256 hash, const std::vector<unsigned char>& vchSig);
 
     bool IsValid();
+
+    void EncryptData(const std::vector<uchar> &plaindata, std::vector<uchar> &encdata);
+
+    void DecryptData(const std::vector<uchar> &encdata, std::vector<uchar> &plaindata);
 };
 
 #endif

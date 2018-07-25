@@ -315,6 +315,10 @@ static const CRPCCommand vRPCCommands[] =
     { "setstakegen",            &setstakegen,            true,   false },
     { "getcounters",            &getcounters,            true,   true  },
     { "getnettotals",           &getnettotals,           true,   true  },
+    { "encryptmessage",         &encryptmessage,         false,  false },
+    { "decryptmessage",         &decryptmessage,         false,  false },
+    { "encryptdata",            &encryptdata,            false,  false },
+    { "decryptdata",            &decryptdata,            false,  false },
 };
 
 CRPCTable::CRPCTable()
