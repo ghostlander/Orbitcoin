@@ -282,6 +282,16 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                     wss.fAnyUnordered = true;
             }
         }
+        else if(strType == "watch") {
+            CScript script;
+            ssKey >> script;
+            char fYes;
+            ssValue >> fYes;
+            if(fYes == '1')
+              pwallet->LoadWatchOnly(script);
+
+            pwallet->UpdateTimeFirstKey();
+        }
         else if (strType == "key" || strType == "wkey")
         {
             vector<unsigned char> vchPubKey;
@@ -374,11 +384,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             wss.nKeyMeta++;
 
             pwallet->LoadKeyMetadata(vchPubKey, keyMeta);
-
-            // find earliest key creation time, as wallet birthday
-            if (!pwallet->nTimeFirstKey ||
-                (keyMeta.nCreateTime < pwallet->nTimeFirstKey))
-                pwallet->nTimeFirstKey = keyMeta.nCreateTime;
+            pwallet->UpdateTimeFirstKey(keyMeta.nCreateTime);
         }
         else if (strType == "defaultkey")
         {
@@ -514,10 +520,8 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     printf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total\n",
            wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys);
 
-    // nTimeFirstKey is only reliable if all keys have metadata
-    if ((wss.nKeys + wss.nCKeys) != wss.nKeyMeta)
-        pwallet->nTimeFirstKey = 1; // 0 would be considered 'no value'
-
+    if((wss.nKeys + wss.nCKeys) != wss.nKeyMeta)
+      pwallet->UpdateTimeFirstKey();
 
     BOOST_FOREACH(uint256 hash, wss.vWalletUpgrade)
         WriteTx(hash, pwallet->mapWallet[hash]);

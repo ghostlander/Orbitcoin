@@ -1695,48 +1695,72 @@ public:
     bool operator()(const CScriptID &scriptID) const { return keystore->HaveCScript(scriptID); }
 };
 
-bool IsMine(const CKeyStore &keystore, const CTxDestination &dest)
-{
-    return boost::apply_visitor(CKeyStoreIsMineVisitor(&keystore), dest);
-}
-
-bool IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
-{
+isminetype IsMine(const CKeyStore &keystore, const CScript &scriptPubKey) {
     vector<valtype> vSolutions;
     txnouttype whichType;
-    if (!Solver(scriptPubKey, whichType, vSolutions))
-        return false;
+
+    if(!Solver(scriptPubKey, whichType, vSolutions)) {
+        if(keystore.HaveWatchOnly(scriptPubKey))
+          return(MINE_WATCH_ONLY);
+        return(MINE_NO);
+    }
 
     CKeyID keyID;
-    switch (whichType)
-    {
-    case TX_NONSTANDARD:
-        return false;
-    case TX_PUBKEY:
-        keyID = CPubKey(vSolutions[0]).GetID();
-        return keystore.HaveKey(keyID);
-    case TX_PUBKEYHASH:
-        keyID = CKeyID(uint160(vSolutions[0]));
-        return keystore.HaveKey(keyID);
-    case TX_SCRIPTHASH:
-    {
-        CScript subscript;
-        if (!keystore.GetCScript(CScriptID(uint160(vSolutions[0])), subscript))
-            return false;
-        return IsMine(keystore, subscript);
+    switch(whichType) {
+
+        case(TX_NONSTANDARD):
+            break;
+
+        case(TX_PUBKEY):
+            keyID = CPubKey(vSolutions[0]).GetID();
+            if(keystore.HaveKey(keyID))
+              return(MINE_SPENDABLE);
+            break;
+
+        case(TX_PUBKEYHASH):
+            keyID = CKeyID(uint160(vSolutions[0]));
+            if(keystore.HaveKey(keyID))
+              return(MINE_SPENDABLE);
+            break;
+
+        case(TX_SCRIPTHASH): {
+            CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
+            CScript subscript;
+
+            if(keystore.GetCScript(scriptID, subscript)) {
+                isminetype ret;
+                ret = IsMine(keystore, subscript);
+                if(ret == MINE_SPENDABLE)
+                  return(ret);
+            }
+            break;
+        }
+
+        case(TX_MULTISIG): {
+            /* Only consider transactions "mine" if we own ALL the
+             * keys involved. multi-signature transactions that are
+             * partially owned (somebody else has a key that can spend
+             * them) enable spend-out-from-under-you attacks, especially
+             * in shared-wallet situations. */
+            vector<valtype> keys(vSolutions.begin() + 1, vSolutions.begin() + vSolutions.size() - 1);
+            if(HaveKeys(keys, keystore) == keys.size())
+              return(MINE_SPENDABLE);
+            break;
+        }
+
     }
-    case TX_MULTISIG:
-    {
-        // Only consider transactions "mine" if we own ALL the
-        // keys involved. multi-signature transactions that are
-        // partially owned (somebody else has a key that can spend
-        // them) enable spend-out-from-under-you attacks, especially
-        // in shared-wallet situations.
-        vector<valtype> keys(vSolutions.begin()+1, vSolutions.begin()+vSolutions.size()-1);
-        return HaveKeys(keys, keystore) == keys.size();
-    }
-    }
-    return false;
+
+    if(keystore.HaveWatchOnly(scriptPubKey))
+      return(MINE_WATCH_ONLY);
+
+    return(MINE_NO);
+}
+
+isminetype IsMine(const CKeyStore &keystore, const CTxDestination &dest) {
+    CScript script;
+
+    script.SetDestination(dest);
+    return(IsMine(keystore, script));
 }
 
 class CAffectedKeysVisitor : public boost::static_visitor<void> {
@@ -2131,19 +2155,28 @@ public:
     }
 };
 
-void CScript::SetDestination(const CTxDestination& dest)
-{
-    boost::apply_visitor(CScriptVisitor(this), dest);
+void CScript::SetDestination(const CTxDestination &addr) {
+    boost::apply_visitor(CScriptVisitor(this), addr);
 }
 
-void CScript::SetMultisig(int nRequired, const std::vector<CKey>& keys)
-{
+void CScript::SetMultisig(int nRequired, const std::vector<CKey> &keys) {
+
     this->clear();
 
     *this << EncodeOP_N(nRequired);
     BOOST_FOREACH(const CKey& key, keys)
         *this << key.GetPubKey();
     *this << EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
+}
+
+/* Produces a P2PKH pubkey script using a pubkey hash */
+CScript GetScriptForPubKeyHash(const CKeyID &keyID) {
+    CScript script;
+
+    script.clear();
+    script << OP_DUP << OP_HASH160 << keyID << OP_EQUALVERIFY << OP_CHECKSIG;
+
+    return(script);
 }
 
 bool CScriptCompressor::IsToKeyID(CKeyID &hash) const

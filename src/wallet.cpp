@@ -46,8 +46,7 @@ CPubKey CWallet::GenerateNewKey()
     // Create new metadata
     int64 nCreationTime = GetTime();
     mapKeyMetadata[pubkey.GetID()] = CKeyMetadata(nCreationTime);
-    if (!nTimeFirstKey || nCreationTime < nTimeFirstKey)
-        nTimeFirstKey = nCreationTime;
+    UpdateTimeFirstKey(nCreationTime);
 
     if (!AddKey(key))
         throw std::runtime_error("CWallet::GenerateNewKey() : AddKey failed");
@@ -83,10 +82,9 @@ bool CWallet::AddCryptedKey(const CPubKey &vchPubKey, const vector<unsigned char
     return false;
 }
 
-bool CWallet::LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &meta)
-{
-    if (meta.nCreateTime && (!nTimeFirstKey || meta.nCreateTime < nTimeFirstKey))
-        nTimeFirstKey = meta.nCreateTime;
+bool CWallet::LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &meta) {
+
+    UpdateTimeFirstKey(meta.nCreateTime);
 
     mapKeyMetadata[pubkey.GetID()] = meta;
     return true;
@@ -99,6 +97,39 @@ bool CWallet::AddCScript(const CScript& redeemScript)
     if (!fFileBacked)
         return true;
     return CWalletDB(strWalletFile).WriteCScript(Hash160(redeemScript), redeemScript);
+}
+
+bool CWallet::AddWatchOnly(const CScript &dest) {
+
+    if(!CCryptoKeyStore::AddWatchOnly(dest))
+      return(false);
+
+    /* No birthday information for watch only keys */
+    UpdateTimeFirstKey();
+
+    if(!fFileBacked)
+      return(true);
+
+    return(CWalletDB(strWalletFile).WriteWatchOnly(dest));
+}
+
+bool CWallet::RemoveWatchOnly(const CScript &dest) {
+
+    LOCK(cs_wallet);
+
+    if(!CCryptoKeyStore::RemoveWatchOnly(dest))
+      return(false);
+
+    if(fFileBacked) {
+        if(!CWalletDB(strWalletFile).EraseWatchOnly(dest))
+          return(false);
+    }
+
+    return(true);
+}
+
+bool CWallet::LoadWatchOnly(const CScript &dest) {
+    return(CCryptoKeyStore::AddWatchOnly(dest));
 }
 
 bool CWallet::Unlock(const SecureString& strWalletPassphrase)
@@ -565,20 +596,20 @@ bool CWallet::EraseFromWallet(uint256 hash)
 }
 
 
-bool CWallet::IsMine(const CTxIn &txin) const
-{
+isminetype CWallet::IsMine(const CTxIn &txin) const {
+
     {
         LOCK(cs_wallet);
         map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.hash);
         if (mi != mapWallet.end())
         {
             const CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.vout.size())
-                if (IsMine(prev.vout[txin.prevout.n]))
-                    return true;
+            if(txin.prevout.n < prev.vout.size())
+                return(IsMine(prev.vout[txin.prevout.n]));
         }
     }
-    return false;
+
+    return(MINE_NO);
 }
 
 int64 CWallet::GetDebit(const CTxIn &txin) const
@@ -1004,9 +1035,11 @@ int64 CWallet::GetMinted(uint nSettings) {
     return(nTotal);
 }
 
-// populate vCoins with vector of spendable COutputs
-void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl) const
-{
+/* Populates vCoins with a vector of spendable and watched COutputs */
+void CWallet::AvailableCoins(vector<COutput> &vCoins, bool fOnlyConfirmed,
+  const CCoinControl *coinControl) const {
+    uint i;
+
     vCoins.clear();
 
     {
@@ -1031,10 +1064,15 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
             if(nDepth < 0)
               continue;
 
-            for (unsigned int i = 0; i < pcoin->vout.size(); i++)
-                if (!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i]) && pcoin->vout[i].nValue >= nMinimumInputValue &&
-                (!coinControl || !coinControl->HasSelected() || coinControl->IsSelected((*it).first, i)))
-                    vCoins.push_back(COutput(pcoin, i, nDepth));
+            for(i = 0; i < pcoin->vout.size(); i++) {
+                isminetype mine = IsMine(pcoin->vout[i]);
+                if(!(pcoin->IsSpent(i)) &&
+                  (mine != MINE_NO) &&
+                  (pcoin->vout[i].nValue >= nMinimumInputValue) &&
+                  (!coinControl || !coinControl->HasSelected() || coinControl->IsSelected((*it).first, i))) {
+                    vCoins.push_back(COutput(pcoin, i, nDepth, mine == MINE_SPENDABLE));
+                }
+            }
 
         }
     }
@@ -1094,6 +1132,10 @@ bool CWallet::SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, in
 
     BOOST_FOREACH(COutput output, vCoins)
     {
+
+        if(!output.fSpendable)
+          continue;
+
         const CWalletTx *pcoin = output.tx;
 
         if (output.nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
@@ -1257,10 +1299,12 @@ bool CWallet::SelectCoinsStaking(int64 nTargetValue,
             }
 
             for(i = 0; i < pcoin->vout.size(); i++) {
-              /* Must be unspent and above the limit in value */
-              if(!(pcoin->IsSpent(i)) && IsMine(pcoin->vout[i])
-                && (pcoin->vout[i].nValue >= nStakeMinValue))
-                vCoins.push_back(COutput(pcoin, i, nDepth));
+                /* Must be unspent, spendable and above the limit in value */
+                if(!(pcoin->IsSpent(i)) &&
+                  (IsMine(pcoin->vout[i]) == MINE_SPENDABLE) &&
+                  (pcoin->vout[i].nValue >= nStakeMinValue)) {
+                    vCoins.push_back(COutput(pcoin, i, nDepth, true));
+                }
             }
         }
     }
@@ -2514,4 +2558,16 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64> &mapKeyBirth) const {
     // Extract block timestamps for those keys
     for (std::map<CKeyID, CBlockIndex*>::const_iterator it = mapKeyFirstBlock.begin(); it != mapKeyFirstBlock.end(); it++)
         mapKeyBirth[it->first] = it->second->nTime - 7200; // block times can be 2h off
+}
+
+void CWallet::UpdateTimeFirstKey(int64 nCreateTime) {
+    const int64 nBirthday = 1356998400; /* 1-Jan-2013 00:00:00 */
+
+    LOCK(cs_wallet);
+    if(nCreateTime < nBirthday) {
+        nTimeFirstKey = nBirthday;
+    } else if(!nTimeFirstKey || (nCreateTime < nTimeFirstKey)) {
+        nTimeFirstKey = nCreateTime;
+    }
+
 }

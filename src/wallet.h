@@ -150,12 +150,20 @@ public:
     bool AddCScript(const CScript& redeemScript);
     bool LoadCScript(const CScript& redeemScript) { return CCryptoKeyStore::AddCScript(redeemScript); }
 
+    /* Adds a watch only address to the store and saves it to disk */
+    bool AddWatchOnly(const CScript &dest);
+    /* Removes a watch only address to the store and saves it to disk */
+    bool RemoveWatchOnly(const CScript &dest);
+    /* Adds a watch only address to the store without saving it to disk (used by LoadWallet) */
+    bool LoadWatchOnly(const CScript &dest);
+
     bool Unlock(const SecureString& strWalletPassphrase);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
     bool EncryptWallet(const SecureString& strWalletPassphrase);
 
     void GetKeyBirthTimes(std::map<CKeyID, int64> &mapKeyBirth) const;
 
+    void UpdateTimeFirstKey(int64 nCreateTime = 0);
 
     /** Increment the next transaction order id
         @return next transaction order id
@@ -206,11 +214,10 @@ public:
     std::set< std::set<CTxDestination> > GetAddressGroupings();
     std::map<CTxDestination, int64> GetAddressBalances();
 
-    bool IsMine(const CTxIn& txin) const;
+    isminetype IsMine(const CTxIn &txin) const;
     int64 GetDebit(const CTxIn& txin) const;
-    bool IsMine(const CTxOut& txout) const
-    {
-        return ::IsMine(*this, txout.scriptPubKey);
+    isminetype IsMine(const CTxOut &txout) const {
+        return(::IsMine(*this, txout.scriptPubKey));
     }
     int64 GetCredit(const CTxOut& txout) const
     {
@@ -710,10 +717,10 @@ public:
     const CWalletTx *tx;
     int i;
     int nDepth;
+    bool fSpendable;
 
-    COutput(const CWalletTx *txIn, int iIn, int nDepthIn)
-    {
-        tx = txIn; i = iIn; nDepth = nDepthIn;
+    COutput(const CWalletTx *txIn, int iIn, int nDepthIn, bool fSpendableIn) {
+        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn;
     }
 
     std::string ToString() const
