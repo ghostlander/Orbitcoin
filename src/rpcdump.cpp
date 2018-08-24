@@ -111,7 +111,7 @@ Value importaddress(const Array &params, bool fHelp) {
         std::string strTemp = params[0].get_str().substr(6, 40);
         /* Insert the Base58 prefix */
         char prefix[1];
-        sprintf(prefix, "%x", fTestNet ? 0x6F : 0x73);
+        sprintf(prefix, "%x", fTestNet ? PUBKEY_ADDRESS_TEST_PREFIX : PUBKEY_ADDRESS_PREFIX);
         strTemp.insert(0, prefix);
         /* Convert and encode */
         std::vector<uchar> vchTemp(ParseHex(strTemp));
