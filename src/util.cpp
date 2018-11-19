@@ -1268,17 +1268,29 @@ void SetMockTime(int64 nMockTimeIn)
     nMockTime = nMockTimeIn;
 }
 
-static int64 nTimeOffset = 0;
+/* Current NTP to system time difference */
+extern int64 nNtpOffset;
 
-int64 GetTimeOffset()
-{
-    return nTimeOffset;
+/* Median time offset calculated from time samples received from peers */
+int64 nPeersOffset = INT64_MAX;
+
+/* Reports the system time adjusted by the NTP or peers */
+int64 GetAdjustedTime() {
+    int64 nTime = GetTime();
+
+    /* If the NTP and system time are within half an hour, follow the former */
+    if(abs64(nNtpOffset) < 30 * 60)
+      return(nTime + nNtpOffset);
+
+    /* If the median peer time and system time are within 1 hour, follow the former */
+    if(abs64(nPeersOffset) < 60 * 60)
+      return(nTime + nPeersOffset);
+
+    return(nTime);
 }
 
-int64 GetAdjustedTime()
-{
-    return GetTime() + GetTimeOffset();
-}
+/* Critical median peer time to system time mismatch */
+bool fPeersWarning = false;
 
 void AddTimeData(const CNetAddr& ip, int64 nTime)
 {
@@ -1297,17 +1309,14 @@ void AddTimeData(const CNetAddr& ip, int64 nTime)
     {
         int64 nMedian = vTimeOffsets.median();
         std::vector<int64> vSorted = vTimeOffsets.sorted();
-        // Only let other nodes change our time by so much
-        if (abs64(nMedian) < 2 * 60)
-        {
-            nTimeOffset = nMedian;
-        }
-        else
-        {
-            nTimeOffset = 0;
 
-            static bool fDone;
-            if (!fDone)
+        // Only let other nodes change our time by so much
+        if(abs64(nMedian) < 60 * 60) {
+            nPeersOffset = nMedian;
+        } else {
+            nPeersOffset = INT64_MAX;
+        }
+
             {
                 // If nobody has a time different than ours but within 5 minutes of ours, give a warning
                 bool fMatch = false;
@@ -1315,23 +1324,29 @@ void AddTimeData(const CNetAddr& ip, int64 nTime)
                     if (nOffset != 0 && abs64(nOffset) < 5 * 60)
                         fMatch = true;
 
-                if (!fMatch)
-                {
-                    fDone = true;
-                    string strMessage = _("Warning: Please check that your computer's date and time are correct! If your clock is wrong Orbitcoin will not work properly.");
+                if(!fMatch && !fPeersWarning) {
+                    fPeersWarning = true;
+                    string strMessage = _("Warning: Please check your date and time! Orbitcoin will not work properly if they are incorrect.");
                     strMiscWarning = strMessage;
                     printf("*** %s\n", strMessage.c_str());
-                    uiInterface.ThreadSafeMessageBox(strMessage+" ", string("Orbitcoin"), CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION);
+                    uiInterface.ThreadSafeMessageBox(strMessage+" ", string("Orbitcoin"),
+                      CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION);
+                }
+
+                if(fMatch && fPeersWarning) {
+                    strMiscWarning.clear();
+                    fPeersWarning = false;
                 }
             }
-        }
+
         if (fDebug) {
             BOOST_FOREACH(int64 n, vSorted)
               printf("%+" PRI64d "  ", n);
             printf("|  ");
         }
-        printf("nTimeOffset = %+" PRI64d "  (%+" PRI64d " minutes)\n",
-          nTimeOffset, nTimeOffset / 60);
+
+        if(nPeersOffset != INT64_MAX)
+          printf("nPeersOffset = %+" PRI64d " seconds\n", nPeersOffset);
     }
 }
 

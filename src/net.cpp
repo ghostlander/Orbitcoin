@@ -6,6 +6,7 @@
 #include "irc.h"
 #include "db.h"
 #include "net.h"
+#include "ntp.h"
 #include "init.h"
 #include "strlcpy.h"
 #include "addrman.h"
@@ -577,8 +578,7 @@ void CNode::Cleanup()
 
 void CNode::PushVersion()
 {
-    /// when NTP implemented, change to just nTime = GetAdjustedTime()
-    int64 nTime = (fInbound ? GetAdjustedTime() : GetTime());
+    int64 nTime = GetAdjustedTime();
     CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService("0.0.0.0",0)));
     CAddress addrMe = GetLocalAddress(&addr);
     RAND_bytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
@@ -1950,6 +1950,13 @@ void StartNode(void* parg)
     // ppcoin: mint proof-of-stake blocks in the background
     if (!NewThread(ThreadStakeMinter, pwalletMain))
         printf("Error: NewThread(ThreadStakeMinter) failed\n");
+
+    /* Trusted NTP server */
+    strTrustedNTP = GetArg("-ntp", "localhost");
+
+    /* NTP polling */
+    if(!NewThread(ThreadNtpPoller, NULL))
+      printf("Error: NewThread(ThreadNtpPoller) failed\n");
 }
 
 bool StopNode()
@@ -1984,6 +1991,7 @@ bool StopNode()
     if (vnThreadsRunning[THREAD_ADDEDCONNECTIONS] > 0) printf("ThreadOpenAddedConnections still running\n");
     if (vnThreadsRunning[THREAD_DUMPADDRESS] > 0) printf("ThreadDumpAddresses still running\n");
     if (vnThreadsRunning[THREAD_MINTER] > 0) printf("ThreadStakeMinter still running\n");
+    if(vnThreadsRunning[THREAD_NTP] > 0) printf("ThreadNtpPoller still running\n");
     while (vnThreadsRunning[THREAD_MESSAGEHANDLER] > 0 || vnThreadsRunning[THREAD_RPCHANDLER] > 0)
         Sleep(20);
     Sleep(50);

@@ -233,7 +233,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/version.h \
     src/netbase.h \
     src/clientversion.h \
-    src/ecies/ecies.h
+    src/ecies/ecies.h \
+    src/ntp.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -312,7 +313,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/pbkdf2.cpp \
     src/ecies/secure.c \
     src/ecies/ecies.c \
-    src/ecies/kdf.c
+    src/ecies/kdf.c \
+    src/ntp.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

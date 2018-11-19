@@ -321,6 +321,7 @@ static const CRPCCommand vRPCCommands[] =
     { "decryptmessage",         &decryptmessage,         false,  false },
     { "encryptdata",            &encryptdata,            false,  false },
     { "decryptdata",            &decryptdata,            false,  false },
+    { "ntptime",                &ntptime,                true,   true  },
 };
 
 CRPCTable::CRPCTable()

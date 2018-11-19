@@ -118,7 +118,8 @@ OBJS= \
     obj/scrypt-x86_64.o \
     obj/ecies.o \
     obj/secure.o \
-    obj/kdf.o
+    obj/kdf.o \
+    obj/ntp.o
 
 all: orbitcoind
 
