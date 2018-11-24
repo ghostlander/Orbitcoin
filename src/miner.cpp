@@ -6,6 +6,7 @@
 
 #include "db.h"
 #include "miner.h"
+#include "util.h"
 #include "kernel.h"
 
 using namespace std;
@@ -511,14 +512,14 @@ void StakeMiner(CWallet *pwallet) {
         while (pwallet->IsLocked())
         {
             strMintWarning = strMintMessage;
-            Sleep(1000);
+            MilliSleep(1000);
             if (fShutdown)
                 return;
         }
 
         while (vNodes.empty() || IsInitialBlockDownload())
         {
-            Sleep(1000);
+            MilliSleep(1000);
             if (fShutdown)
                 return;
         }
@@ -541,7 +542,7 @@ void StakeMiner(CWallet *pwallet) {
 
         delete(pblock);
 
-        Sleep(nMinerSleep);
+        MilliSleep((int64)nMinerSleep);
 
     }
 }

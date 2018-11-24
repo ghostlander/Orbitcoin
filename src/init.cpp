@@ -2,6 +2,7 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "txdb.h"
 #include "walletdb.h"
 #include "bitcoinrpc.h"
@@ -10,6 +11,7 @@
 #include "util.h"
 #include "ui_interface.h"
 #include "checkpoints.h"
+
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/convenience.hpp>
@@ -51,7 +53,7 @@ uint opt_flags = 0;
 void ExitTimeout(void* parg)
 {
 #ifdef WIN32
-    Sleep(5000);
+    MilliSleep(5000);
     ExitProcess(0);
 #endif
 }
@@ -112,7 +114,7 @@ void Shutdown(void* parg)
         delete pwalletMain;
         NewThread(ExitTimeout, NULL);
         fExit = true;
-        Sleep(1000);
+        MilliSleep(1000);
         printf("Shutdown() : completed\n\n");
 #ifndef QT_GUI
         // ensure non-UI client gets exited here, but let Bitcoin-Qt reach 'return 0;' in bitcoin.cpp
@@ -121,9 +123,8 @@ void Shutdown(void* parg)
     }
     else
     {
-        while (!fExit)
-            Sleep(500);
-        Sleep(100);
+        while(!fExit) MilliSleep(500);
+        MilliSleep(100);
         ExitThread(0);
     }
 }
@@ -1023,8 +1024,7 @@ bool AppInit2()
 #if !defined(QT_GUI)
     // Loop until process is exit()ed from shutdown() function,
     // called from ThreadRPCServer thread when a "stop" command is received.
-    while (1)
-        Sleep(5000);
+    while(1) MilliSleep(5000);
 #endif
 
     return true;

@@ -13,6 +13,7 @@
 #include <unistd.h>
 #endif
 
+#include "util.h"
 #include "netbase.h"
 #include "net.h"
 #include "ui_interface.h"
@@ -465,7 +466,7 @@ void ThreadNtpPoller(void *parg) {
             else {
                 int nSleepMinutes = 1 + GetRandInt(9);
                 for(i = 0; (i < nSleepMinutes * 60) && !fShutdown; i++)
-                  Sleep(1000);
+                  MilliSleep(1000);
                 continue;
             }
 
@@ -493,7 +494,7 @@ void ThreadNtpPoller(void *parg) {
           "the next sync in %d hours\n", nNtpOffset, nSleepHours);
 
         for(i = 0; (i < nSleepHours * 60 * 60) && !fShutdown; i++)
-          Sleep(1000);
+          MilliSleep(1000);
 
     }
 

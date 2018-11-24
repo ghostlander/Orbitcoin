@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "irc.h"
+#include "util.h"
 #include "strlcpy.h"
 #include "base58.h"
 #include "net.h"
@@ -127,7 +128,7 @@ bool Wait(int nSeconds)
     {
         if (fShutdown)
             return false;
-        Sleep(1000);
+        MilliSleep(1000);
     }
     return true;
 }
@@ -283,7 +284,7 @@ void ThreadIRCSeed2(void* parg)
                 return;
         }
         nNameRetry = 0;
-        Sleep(500);
+        MilliSleep(500);
 
         // Get our external IP from the IRC server and re-nick before joining the channel
         CNetAddr addrFromIRC;
