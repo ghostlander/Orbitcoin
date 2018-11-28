@@ -59,6 +59,9 @@ static const int64 CENT = 10000;
 #endif
 #endif
 
+#ifndef INT64_MAX
+#define INT64_MAX 9223372036854775807LL
+#endif
 
 /* Format characters for (s)size_t and ptrdiff_t */
 #if defined(_MSC_VER) || defined(__MSVCRT__)
