@@ -23,6 +23,6 @@ void FormatDataBuffer(CBlock *pblock, uint *pdata);
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey);
 
 /** Check mined proof-of-stake block */
-bool CheckStake(CBlock* pblock, CWallet& wallet);
+bool CheckStake(CBlock *pblock, CWallet &wallet, uint nStakerID);
 
 #endif /* MINER_H */

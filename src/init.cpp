@@ -40,6 +40,7 @@ unsigned int nMsgSleep;
 unsigned int nMinerSleep;
 uint nStakeMinTime;
 uint nStakeMinDepth;
+uint nStakeFence;
 enum Checkpoints::CPMode CheckpointsMode;
 
 /* Assembly level processor optimisation features */
@@ -333,10 +334,11 @@ std::string HelpMessage()
         "\n" + _("Staking options:") + "\n" +
         "  -stakegen=<n>          "   + _("Generate coin stakes (default: 1 = enabled)") + "\n" +
         "  -stakemintime=<n>      "   + _("Set the min. stake input block chain time in hours (default: 48 or testnet: 1)") + "\n" +
-        "  -stakemindepth=<n>     "   + _("Set the min. stake input block chain depth in confirmations (default: follow -stakeminage)") + "\n" +
+        "  -stakemindepth=<n>     "   + _("Set the min. stake input block chain depth in confirmations (default: follow -stakemintime)") + "\n" +
         "  -stakeminvalue=<n>     "   + _("Set the min. stake input value in coins (default: 1.0)") + "\n" +
         "  -stakecombine=<n>      "   + _("Try to combine inputs while staking up to this limit in coins (20 < n < 200; default: 20)") + "\n";
         "  -stakesplit=<n>        "   + _("Don't split outputs while staking below this limit in coins (40 < n < 400; default: 80)") + "\n";
+        "  -stakefence=<n>        "   + _("Input separator between two staking threads; specifies age in hours (default: max. stake age)") + "\n";
 
     return strUsage;
 }
@@ -427,6 +429,9 @@ bool AppInit2()
     }
     /* Reset time if depth is specified */
     if(nStakeMinDepth) nStakeMinTime = 0;
+
+    /* Stake input separator between threads */
+    nStakeFence = (uint)GetArg("-stakefence", nStakeMaxAge / (60 * 60));
 
     CheckpointsMode = Checkpoints::STRICT;
     std::string strCpMode = GetArg("-cppolicy", "strict");
@@ -756,16 +761,6 @@ bool AppInit2()
             if (!addrLocal.IsValid())
                 return InitError(strprintf(_("Cannot resolve -externalip address: '%s'"), strAddr.c_str()));
             AddLocal(CService(strAddr, GetListenPort(), fNameLookup), LOCAL_MANUAL);
-        }
-    }
-
-    if (mapArgs.count("-reservebalance")) // ppcoin: reserve balance amount
-    {
-        int64 nReserveBalance = 0;
-        if (!ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
-        {
-            InitError(_("Invalid amount for -reservebalance=<amount>"));
-            return false;
         }
     }
 

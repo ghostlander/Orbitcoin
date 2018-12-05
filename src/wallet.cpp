@@ -1249,27 +1249,41 @@ bool CWallet::SelectCoins(int64 nTargetValue, uint nSpendTime,
 }
 
 
-set<pair<const CWalletTx*, uint> > setCoinsCache;
-int64 nCoinsCacheValue = 0;
-uint  nCoinsCacheTime  = 0;
+set<pair<const CWalletTx *, uint> > setCoinsCache0, setCoinsCache1;
+int64 nCoinsCache0Value = 0, nCoinsCache1Value = 0;
+uint nCoinsCache0Time = 0, nCoinsCache1Time = 0;
 const uint nCoinsCacheInterval = 600;  /* 10 minutes */
 
 /* Quick cacheable selection of inputs for staking */
 bool CWallet::SelectCoinsStaking(int64 nTargetValue, 
-  set<pair<const CWalletTx *, uint> > &setCoinsRet, int64 &nValueRet) const {
+  set<pair<const CWalletTx *, uint> > &setCoinsRet,
+  int64 &nValueRet, uint nStakerID) const {
 
     uint nCurrentTime = GetTime();
-    if(nCurrentTime < (nCoinsCacheTime + nCoinsCacheInterval)) {
-        /* Try to re-use inputs cached */
-        if(setCoinsCache.size()) {
-            setCoinsRet = setCoinsCache;
-            nValueRet = nCoinsCacheValue;
-            nInputCacheHits++;
-            return(true);
+
+    if(!nStakerID) {
+        if(nCurrentTime < (nCoinsCache0Time + nCoinsCacheInterval)) {
+            /* Try to re-use inputs in the cache 0 */
+            if(setCoinsCache0.size()) {
+                setCoinsRet = setCoinsCache0;
+                nValueRet = nCoinsCache0Value;
+                nInputCache0Hits++;
+                return(true);
+            }
+        }
+    } else {
+        if(nCurrentTime < (nCoinsCache1Time + nCoinsCacheInterval)) {
+            /* Try to re-use inputs in the cache 1 */
+            if(setCoinsCache1.size()) {
+                setCoinsRet = setCoinsCache1;
+                nValueRet = nCoinsCache1Value;
+                nInputCache1Hits++;
+                return(true);
+            }
         }
     }
 
-    uint i;
+    uint nFenceTime, i;
     int nDepth;
     vector<COutput> vCoins;
     vCoins.clear();
@@ -1296,6 +1310,14 @@ bool CWallet::SelectCoinsStaking(int64 nTargetValue,
             } else {
                 if(nDepth < (int)nStakeMinDepth)
                   continue;
+            }
+
+            /* Discard if behind the fence */
+            nFenceTime = nStakeFence ? (pcoin->nTime + nStakeFence * 60 * 60) : ~0U;
+            if(!nStakerID) {
+                if(nCurrentTime > nFenceTime) continue;
+            } else {
+                if(nCurrentTime <= nFenceTime) continue;
             }
 
             for(i = 0; i < pcoin->vout.size(); i++) {
@@ -1337,13 +1359,22 @@ bool CWallet::SelectCoinsStaking(int64 nTargetValue,
     }
 
     /* Clear and reload the cache */
-    setCoinsCache.clear();
-    setCoinsCache = setCoinsRet;
-    nCoinsCacheValue = nValueRet;
-    nCoinsCacheTime = nCurrentTime;
-    nInputCacheMisses++;
+    if(!nStakerID) {
+        setCoinsCache0.clear();
+        setCoinsCache0 = setCoinsRet;
+        nCoinsCache0Value = nValueRet;
+        nCoinsCache0Time = nCurrentTime;
+        nInputCache0Misses++;
+    } else {
+        setCoinsCache1.clear();
+        setCoinsCache1 = setCoinsRet;
+        nCoinsCache1Value = nValueRet;
+        nCoinsCache1Time = nCurrentTime;
+        nInputCache1Misses++;
+    }
 
-    printf("SelectCoinsStaking() : %u inputs cached\n", (uint)setCoinsCache.size());
+    printf("SelectCoinsStaking() : %u inputs in the thread %u cache\n",
+      nStakerID ? (uint)setCoinsCache1.size() : (uint)setCoinsCache0.size(), nStakerID);
 
     return(true);
 }
@@ -1498,66 +1529,61 @@ bool CWallet::GetStakeWeightQuick(const int64& nTime, const int64& nValue, uint6
 }
 
 /* Get a total wallet stake weight */
-bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeightInputs, uint64& nAvgWeightInputs, uint64& nMaxWeightInputs, uint64& nTotalStakeWeight) {
+bool CWallet::GetStakeWeight(const CKeyStore &keystore, uint64 &nMinWeightInputs,
+  uint64 &nAvgWeightInputs, uint64 &nMaxWeightInputs, uint64 &nTotalStakeWeight) {
     CBigNum bnCoinDayWeight = 0;
     int64 nTimeWeight;
+    uint i;
 
-    // Choose coins to use
     int64 nBalance = GetBalance(0x1);
-    int64 nReserveBalance = 0;
-
-    if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
-    {
-        error("GetStakeWeight : invalid reserve balance amount");
-        return false;
-    }
-
-    if (nBalance <= nReserveBalance)
-        return false;
 
     vector<const CWalletTx*> vwtxPrev;
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     int64 nValueIn = 0;
 
-    /* Select aged coins */
-    if(!SelectCoinsStaking(nBalance - nReserveBalance, setCoins, nValueIn))
-      return(false);
-
-    if(setCoins.empty()) return(false);
-
     nMinWeightInputs = 0, nAvgWeightInputs = 0, nMaxWeightInputs = 0, nTotalStakeWeight = 0;
 
-    CCoinsViewCache &view = *pcoinsTip;
-    BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
-    {
-        CCoins coins;
-        {
-            LOCK2(cs_main, cs_wallet);
-            if (!view.GetCoinsReadOnly(pcoin.first->GetHash(), coins))
-                continue;
+    for(i = 0; i < (nStakeFence ? 2 : 1); i++) {
+
+        SelectCoinsStaking(nBalance, setCoins, nValueIn, i);
+
+        if(setCoins.empty()) continue;
+
+        CCoinsViewCache &view = *pcoinsTip;
+        BOOST_FOREACH(PAIRTYPE(const CWalletTx *, uint) pcoin, setCoins) {
+            CCoins coins;
+
+            {
+                LOCK2(cs_main, cs_wallet);
+                if(!view.GetCoinsReadOnly(pcoin.first->GetHash(), coins))
+                  continue;
+            }
+
+            nTimeWeight = GetWeight((int64)pcoin.first->nTime, (int64)GetTime());
+            if(nTimeWeight > 0) {
+                /* Calculate stake weight */
+                bnCoinDayWeight =
+                  (CBigNum(pcoin.first->vout[pcoin.second].nValue) * nTimeWeight) / COIN / (24 * 60 * 60);
+                nTotalStakeWeight += bnCoinDayWeight.getuint64();
+                /* Minimum weight reached */
+                if(nTimeWeight < (nStakeMaxAge / 2)) nMinWeightInputs++;
+                /* Average weight reached */
+                else if(nTimeWeight < nStakeMaxAge) nAvgWeightInputs++;
+                /* Maximum weight reached */
+                else nMaxWeightInputs++;
+            }
+
         }
 
-        nTimeWeight = GetWeight((int64)pcoin.first->nTime, (int64)GetTime());
-        if(nTimeWeight > 0) {
-            /* Calculate stake weight */
-            bnCoinDayWeight =
-              (CBigNum(pcoin.first->vout[pcoin.second].nValue) * nTimeWeight) / COIN / (24 * 60 * 60);
-            nTotalStakeWeight += bnCoinDayWeight.getuint64();
-            /* Minimum weight reached */
-            if(nTimeWeight < (nStakeMaxAge / 2)) nMinWeightInputs++;
-            /* Average weight reached */
-            else if(nTimeWeight < nStakeMaxAge) nAvgWeightInputs++;
-            /* Maximum weight reached */
-            else nMaxWeightInputs++;
-        }
+        setCoins.clear();
 
     }
 
-    return true;
+    return(true);
 }
 
-bool CWallet::CreateCoinStake(const CKeyStore& keystore, uint nBits, int64 nSearchInterval,
-  CTransaction& txNew, CKey& key, int64 nStakeReward) {
+bool CWallet::CreateCoinStake(const CKeyStore &keystore, uint nBits, int64 nSearchInterval,
+  CTransaction &txNew, CKey &key, int64 nStakeReward, uint nStakerID) {
 
     /* Inputs exceeding this age limit are never split while staking */
     const uint nStakeSplitAge = (nStakeMinAgeTwo + nStakeMaxAge);
@@ -1579,21 +1605,13 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, uint nBits, int64 nSear
 
     // Choose coins to use
     int64 nBalance = GetBalance(0x1);
-    int64 nReserveBalance = 0;
-
-    if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
-        return error("CreateCoinStake : invalid reserve balance amount");
-
-    if (nBalance <= nReserveBalance)
-        return false;
 
     vector<const CWalletTx*> vwtxPrev;
     set<pair<const CWalletTx*, uint> > setCoins;
     int64 nValueIn = 0;
 
     /* Select aged coins */
-    if(!SelectCoinsStaking(nBalance - nReserveBalance, setCoins, nValueIn))
-      return(false);
+    SelectCoinsStaking(nBalance, setCoins, nValueIn, nStakerID);
 
     if(setCoins.empty()) return(false);
 
@@ -1720,9 +1738,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, uint nBits, int64 nSear
           break;
     }
 
-    /* At this point, stake amount must be positive and within the stake limit if defined */
-    if(!nCredit || (nCredit > (nBalance - nReserveBalance)))
-      return(false);
+    /* Must be positive */
+    if(nCredit <= 0) return(false);
 
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, uint) pcoin, setCoins) {
 
@@ -1739,9 +1756,6 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, uint nBits, int64 nSear
               break;
             /* Do not add any inputs if reached or exceeded the threshold already */
             if(nCredit >= nCombineThreshold)
-              break;
-            /* Do not add a new input exceeding the stake limit if defined */
-            if((nCredit + pcoin.first->vout[pcoin.second].nValue) > (nBalance - nReserveBalance))
               break;
             /* Do not add any large inputs capable of stake generation on their own */
             if(pcoin.first->vout[pcoin.second].nValue >= nCombineThreshold)
@@ -1803,9 +1817,15 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, uint nBits, int64 nSear
     }
 
     /* Clear inputs cached */
-    setCoinsCache.clear();
-    nCoinsCacheValue = 0;
-    nCoinsCacheTime  = 0;
+    if(!nStakerID) {
+        setCoinsCache0.clear();
+        nCoinsCache0Value = 0;
+        nCoinsCache0Time  = 0;
+    } else {
+        setCoinsCache1.clear();
+        nCoinsCache1Value = 0;
+        nCoinsCache1Time  = 0;
+    }
 
     return(true);
 }
@@ -1860,9 +1880,12 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 
     /* Clear if staking is active */
     if(fStakeGen) {
-        setCoinsCache.clear();
-        nCoinsCacheValue = 0;
-        nCoinsCacheTime  = 0;
+        setCoinsCache0.clear();
+        setCoinsCache1.clear();
+        nCoinsCache0Value = 0;
+        nCoinsCache1Value = 0;
+        nCoinsCache0Time  = 0;
+        nCoinsCache1Time  = 0;
     }
 
     return(true);

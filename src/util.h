@@ -156,11 +156,14 @@ extern uint64 nBlockHashCacheHits;
 extern uint64 nBlockHashCacheMisses;
 extern uint64 nModifierCacheHits;
 extern uint64 nModifierCacheMisses;
-extern uint64 nInputCacheHits;
-extern uint64 nInputCacheMisses;
+extern uint64 nInputCache0Hits;
+extern uint64 nInputCache0Misses;
+extern uint64 nInputCache1Hits;
+extern uint64 nInputCache1Misses;
 
 extern uint nStakeMinTime;
 extern uint nStakeMinDepth;
+extern uint nStakeFence;
 extern long long nLastWalletStakeTime;
 extern unsigned long long nMinWeightInputs;
 extern unsigned long long nAvgWeightInputs;

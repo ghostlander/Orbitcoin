@@ -174,7 +174,8 @@ bool ConnectBestBlock();
 CBlockIndex * InsertBlockIndex(uint256 hash);
 uint256 WantedByOrphan(const CBlock* pblockOrphan);
 const CBlockIndex *GetPrevBlockIndex(const CBlockIndex *pindex, uint nRange, bool fProofOfStake);
-void StakeMiner(CWallet *pwallet);
+void StakeMiner0(CWallet *pwallet);
+void StakeMiner1(CWallet *pwallet);
 void ResendWalletTransactions(bool fForce=false);
 
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
@@ -1602,7 +1603,7 @@ public:
     bool GetCoinAge(uint64 *pCoinAge=NULL, uint64 *pCoinAgeFails=NULL) const;
 
     // Generate proof-of-stake block signature
-    bool SignBlock(CWallet& keystore, int64 nStakeReward);
+    bool SignBlock(CWallet& keystore, int64 nStakeReward, uint nStakerID);
 
     /* Generate a proof-of-work block signature */
     bool SignWorkBlock(const CKeyStore& keystore);

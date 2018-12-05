@@ -50,6 +50,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("stakeminvalue", ValueFromAmount(nStakeMinValue)));
     obj.push_back(Pair("stakecombine",  ValueFromAmount(nCombineThreshold)));
     obj.push_back(Pair("stakesplit",    ValueFromAmount(nSplitThreshold)));
+    obj.push_back(Pair("stakefence",    (int)nStakeFence));
     obj.push_back(Pair("pooledtx",      (boost::uint64_t)mempool.size()));
     obj.push_back(Pair("testnet",       fTestNet));
 
@@ -67,8 +68,12 @@ Value getcounters(const Array& params, bool fHelp) {
     obj.push_back(Pair("block hash cache misses",     (boost::uint64_t)nBlockHashCacheMisses));
     obj.push_back(Pair("stake modifier cache hits",   (boost::uint64_t)nModifierCacheHits));
     obj.push_back(Pair("stake modifier cache misses", (boost::uint64_t)nModifierCacheMisses));
-    obj.push_back(Pair("stake input cache hits",      (boost::uint64_t)nInputCacheHits));
-    obj.push_back(Pair("stake input cache misses",    (boost::uint64_t)nInputCacheMisses));
+    obj.push_back(Pair("stake input cache hits",      (boost::uint64_t)(nInputCache0Hits + nInputCache1Hits)));
+    obj.push_back(Pair("stake input cache misses",    (boost::uint64_t)(nInputCache0Misses + nInputCache1Misses)));
+//    obj.push_back(Pair("stake input cache thread 0 hits",    (boost::uint64_t)(nInputCache0Hits)));
+//    obj.push_back(Pair("stake input cache thread 0 misses",  (boost::uint64_t)(nInputCache0Misses)));
+//    obj.push_back(Pair("stake input cache thread 1 hits",    (boost::uint64_t)(nInputCache1Hits)));
+//    obj.push_back(Pair("stake input cache thread 1 misses",  (boost::uint64_t)(nInputCache1Misses)));
 
     return(obj);
 }

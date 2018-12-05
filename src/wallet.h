@@ -71,9 +71,11 @@ private:
     bool SelectCoins(int64 nTargetValue, uint nSpendTime,
       std::set<std::pair<const CWalletTx*, uint> >& setCoinsRet, int64& nValueRet,
       const CCoinControl *coinControl=NULL) const;
+
     /* Quick cacheable selection of inputs for staking */
     bool SelectCoinsStaking(int64 nTargetValue,
-      std::set<std::pair<const CWalletTx *, uint> > &setCoinsRet, int64 &nValueRet) const;
+      std::set<std::pair<const CWalletTx *, uint> > &setCoinsRet,
+      int64 &nValueRet, uint nStakerID) const;
 
     CWalletDB *pwalletdbEncryption;
 
@@ -194,9 +196,10 @@ public:
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
     bool GetStakeWeightQuick(const int64& nTime, const int64& nValue, uint64& nWeight);
-    bool GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeightInputs, uint64& nAvgWeightInputs, uint64& nMaxWeightInputs, uint64& nTotalStakeWeight);
-    bool CreateCoinStake(const CKeyStore& keystore, uint nBits, int64 nSearchInterval,
-      CTransaction& txNew, CKey& key, int64 nStakeReward);
+    bool GetStakeWeight(const CKeyStore &keystore, uint64 &nMinWeightInputs,
+      uint64 &nAvgWeightInputs, uint64 &nMaxWeightInputs, uint64 &nTotalStakeWeight);
+    bool CreateCoinStake(const CKeyStore &keystore, uint nBits, int64 nSearchInterval,
+      CTransaction &txNew, CKey &key, int64 nStakeReward, uint nStakerID);
 
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false, std::string strTxComment = "");
     std::string SendMoneyToDestination(const CTxDestination &address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false, std::string strTxComment = "");

@@ -1346,31 +1346,59 @@ void static ProcessOneShot()
     }
 }
 
-/* Proof-of-stake mining thread */
-void static ThreadStakeMinter(void* parg)
-{
+/* The 1st proof-of-stake mining thread */
+void static ThreadStakeMiner0(void *parg) {
+
     while(!fShutdown) {
-        printf("ThreadStakeMinter started\n");
+        printf("ThreadStakeMiner0 started\n");
         if(fStakeGen) {    
-            CWallet* pwallet = (CWallet*)parg;
+            CWallet *pwallet = (CWallet *) parg;
             try {
-                vnThreadsRunning[THREAD_MINTER]++;
-                StakeMiner(pwallet);
-                vnThreadsRunning[THREAD_MINTER]--;
+                vnThreadsRunning[THREAD_STAKER0]++;
+                StakeMiner0(pwallet);
+                vnThreadsRunning[THREAD_STAKER0]--;
             }
-            catch(std::exception& e) {
-                vnThreadsRunning[THREAD_MINTER]--;
-                PrintException(&e, "ThreadStakeMinter()");
+            catch(std::exception &e) {
+                vnThreadsRunning[THREAD_STAKER0]--;
+                PrintException(&e, "ThreadStakeMiner0()");
             } catch(...) {
-                vnThreadsRunning[THREAD_MINTER]--;
-                PrintException(NULL, "ThreadStakeMinter()");
+                vnThreadsRunning[THREAD_STAKER0]--;
+                PrintException(NULL, "ThreadStakeMiner0()");
             }
             if(!fShutdown)
-              printf("ThreadStakeMinter paused, %d threads remaining\n", vnThreadsRunning[THREAD_MINTER]);
+              printf("ThreadStakeMiner0 paused\n");
         }
         while(!fStakeGen && !fShutdown) MilliSleep(1000);
         if(fShutdown)
-          printf("ThreadStakeMinter exited, %d threads remaining\n", vnThreadsRunning[THREAD_MINTER]);
+          printf("ThreadStakeMiner0 exited\n");
+    }
+}
+
+/* The 2nd proof-of-stake mining thread */
+void static ThreadStakeMiner1(void *parg) {
+
+    while(!fShutdown) {
+        printf("ThreadStakeMiner1 started\n");
+        if(fStakeGen) {    
+            CWallet *pwallet = (CWallet *) parg;
+            try {
+                vnThreadsRunning[THREAD_STAKER1]++;
+                StakeMiner1(pwallet);
+                vnThreadsRunning[THREAD_STAKER1]--;
+            }
+            catch(std::exception &e) {
+                vnThreadsRunning[THREAD_STAKER1]--;
+                PrintException(&e, "ThreadStakeMiner1()");
+            } catch(...) {
+                vnThreadsRunning[THREAD_STAKER1]--;
+                PrintException(NULL, "ThreadStakeMiner1()");
+            }
+            if(!fShutdown)
+              printf("ThreadStakeMiner1 paused\n");
+        }
+        while(!fStakeGen && !fShutdown) MilliSleep(1000);
+        if(fShutdown)
+          printf("ThreadStakeMiner1 exited\n");
     }
 }
 
@@ -1948,9 +1976,13 @@ void StartNode(void* parg)
     if (!NewThread(ThreadDumpAddress, NULL))
         printf("Error; NewThread(ThreadDumpAddress) failed\n");
 
-    // ppcoin: mint proof-of-stake blocks in the background
-    if (!NewThread(ThreadStakeMinter, pwalletMain))
-        printf("Error: NewThread(ThreadStakeMinter) failed\n");
+    /* The 1st proof-of-stake mining thread */
+    if(!NewThread(ThreadStakeMiner0, pwalletMain))
+      printf("Error: NewThread(ThreadStakeMiner0) failed\n");
+
+    /* The 2nd proof-of-stake mining thread */
+    if(nStakeFence && !NewThread(ThreadStakeMiner1, pwalletMain))
+      printf("Error: NewThread(ThreadStakeMiner1) failed\n");
 
     /* Trusted NTP server */
     strTrustedNTP = GetArg("-ntp", "localhost");
@@ -1991,7 +2023,8 @@ bool StopNode()
     if (vnThreadsRunning[THREAD_DNSSEED] > 0) printf("ThreadDNSAddressSeed still running\n");
     if (vnThreadsRunning[THREAD_ADDEDCONNECTIONS] > 0) printf("ThreadOpenAddedConnections still running\n");
     if (vnThreadsRunning[THREAD_DUMPADDRESS] > 0) printf("ThreadDumpAddresses still running\n");
-    if (vnThreadsRunning[THREAD_MINTER] > 0) printf("ThreadStakeMinter still running\n");
+    if(vnThreadsRunning[THREAD_STAKER0] > 0) printf("ThreadStakeMiner0 still running\n");
+    if(vnThreadsRunning[THREAD_STAKER1] > 0) printf("ThreadStakeMiner1 still running\n");
     while((vnThreadsRunning[THREAD_MESSAGEHANDLER] > 0)
       || (vnThreadsRunning[THREAD_RPCHANDLER] > 0)) MilliSleep(20);
     MilliSleep(50);

@@ -94,8 +94,10 @@ uint64 nBlockHashCacheHits = 0;
 uint64 nBlockHashCacheMisses = 0;
 uint64 nModifierCacheHits = 0;
 uint64 nModifierCacheMisses = 0;
-uint64 nInputCacheHits = 0;
-uint64 nInputCacheMisses = 0;
+uint64 nInputCache0Hits = 0;
+uint64 nInputCache0Misses = 0;
+uint64 nInputCache1Hits = 0;
+uint64 nInputCache1Misses = 0;
 
 /* Shared between getmininginfo and the Qt client */
 long long nLastWalletStakeTime = 0;

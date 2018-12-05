@@ -451,7 +451,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey) {
     return true;
 }
 
-bool CheckStake(CBlock* pblock, CWallet& wallet) {
+bool CheckStake(CBlock *pblock, CWallet &wallet, uint nStakerID) {
     uint256 hashBlock = pblock->GetHash();
     uint256 hashTarget = 0;
     int nBlockHeight = pblock->GetBlockHeight();
@@ -467,9 +467,9 @@ bool CheckStake(CBlock* pblock, CWallet& wallet) {
     if(!CheckProofOfStake(pblock->vtx[1], pblock->nBits, hashProof, hashTarget, fCritical, true))
       return(error("CheckStake() : proof-of-stake check failed"));
 
-    printf("CheckStake() : new proof-of-stake block of height %d found!\n"
+    printf("CheckStake() : thread %u reports new proof-of-stake block of height %d found!\n"
       "  hash:      %s\n  proofhash: %s\n  target:    %s\n",
-      nBlockHeight, hashBlock.GetHex().c_str(), hashProof.GetHex().c_str(),
+      nStakerID, nBlockHeight, hashBlock.GetHex().c_str(), hashProof.GetHex().c_str(),
       hashTarget.GetHex().c_str());
     pblock->print();
     printf("out %s\n", FormatMoney(pblock->vtx[1].GetValueOut()).c_str());
@@ -494,49 +494,42 @@ bool CheckStake(CBlock* pblock, CWallet& wallet) {
     return true;
 }
 
-void StakeMiner(CWallet *pwallet) {
+void StakeMiner0(CWallet *pwallet) {
     int64 nStakeReward = 0;
+    uint nExtraNonce = 0;
 
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
-    // Make this thread recognisable as a stake mining thread
-    RenameThread("orb-stakeminer");
-
-    // Each thread has its own counter
-    unsigned int nExtraNonce = 0;
+    RenameThread("orb-staker0");
 
     while(fStakeGen) {
 
         if(fShutdown) return;
 
-        while (pwallet->IsLocked())
-        {
+        while(pwallet->IsLocked()) {
             strMintWarning = strMintMessage;
             MilliSleep(1000);
-            if (fShutdown)
-                return;
+            if(fShutdown) return;
         }
 
-        while (vNodes.empty() || IsInitialBlockDownload())
-        {
+        while(vNodes.empty() || IsInitialBlockDownload()) {
             MilliSleep(1000);
-            if (fShutdown)
-                return;
+            if(fShutdown) return;
         }
 
-        strMintWarning = "";
+        strMintWarning.clear();
 
         /* Create a new block and receive a stake reward expected */
-        CBlockIndex* pindexPrev = pindexBest;
+        CBlockIndex *pindexPrev = pindexBest;
         CBlock *pblock = CreateNewBlock(pwallet, true, &nStakeReward);
         if(!pblock) return;
         IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
         /* Try to sign the block with the stake reward obtained previously */ 
-        if(pblock->SignBlock(*pwallet, nStakeReward)) {
+        if(pblock->SignBlock(*pwallet, nStakeReward, 0)) {
             strMintWarning = _("Stake generation: new block found!");
             SetThreadPriority(THREAD_PRIORITY_NORMAL);
-            CheckStake(pblock, *pwallet);
+            CheckStake(pblock, *pwallet, 0);
             SetThreadPriority(THREAD_PRIORITY_LOWEST);
         }
 
@@ -547,3 +540,48 @@ void StakeMiner(CWallet *pwallet) {
     }
 }
 
+void StakeMiner1(CWallet *pwallet) {
+    int64 nStakeReward = 0;
+    uint nExtraNonce = 0;
+
+    SetThreadPriority(THREAD_PRIORITY_LOWEST);
+
+    RenameThread("orb-staker1");
+
+    while(fStakeGen) {
+
+        if(fShutdown) return;
+
+        while(pwallet->IsLocked()) {
+            strMintWarning = strMintMessage;
+            MilliSleep(1000);
+            if(fShutdown) return;
+        }
+
+        while(vNodes.empty() || IsInitialBlockDownload()) {
+            MilliSleep(1000);
+            if(fShutdown) return;
+        }
+
+        strMintWarning.clear();
+
+        /* Create a new block and receive a stake reward expected */
+        CBlockIndex *pindexPrev = pindexBest;
+        CBlock *pblock = CreateNewBlock(pwallet, true, &nStakeReward);
+        if(!pblock) return;
+        IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
+
+        /* Try to sign the block with the stake reward obtained previously */ 
+        if(pblock->SignBlock(*pwallet, nStakeReward, 1)) {
+            strMintWarning = _("Stake generation: new block found!");
+            SetThreadPriority(THREAD_PRIORITY_NORMAL);
+            CheckStake(pblock, *pwallet, 1);
+            SetThreadPriority(THREAD_PRIORITY_LOWEST);
+        }
+
+        delete(pblock);
+
+        MilliSleep((int64)nMinerSleep);
+
+    }
+}

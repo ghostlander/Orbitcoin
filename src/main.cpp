@@ -2860,7 +2860,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp) {
 }
 
 // novacoin: attempt to generate suitable proof-of-stake
-bool CBlock::SignBlock(CWallet& wallet, int64 nStakeReward) {
+bool CBlock::SignBlock(CWallet& wallet, int64 nStakeReward, uint nStakerID) {
 
     // if we are trying to sign
     //    something except proof-of-stake block template
@@ -2880,8 +2880,9 @@ bool CBlock::SignBlock(CWallet& wallet, int64 nStakeReward) {
 
     if (nSearchTime > nLastCoinStakeSearchTime)
     {
-        if (wallet.CreateCoinStake(wallet, nBits, nSearchTime-nLastCoinStakeSearchTime, txCoinStake, key, nStakeReward))
-        {
+        if(wallet.CreateCoinStake(wallet, nBits, nSearchTime-nLastCoinStakeSearchTime,
+          txCoinStake, key, nStakeReward, nStakerID)) {
+
             if(txCoinStake.nTime >= max((pindexBest->GetMedianTimePast() + BLOCK_LIMITER_TIME_NEW + 1),
               PastDrift(pindexBest->GetBlockTime()))) {
 
