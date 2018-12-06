@@ -14,7 +14,7 @@ Orbitcoin (ORB) is a decentralised open source digital currency.
  - advanced checkpointing against 51% attacks
  - transaction messaging supported
  - the 1st implementation of 0% PoS
- - PoW and PoS blocks carry the same fixed reward of 1 ORB
+ - PoW and PoS blocks carry the same fixed reward of 0.5 ORB
  - 6 confirmations for regular transactions
  - 200 confirmations for minted coins
  - very low transaction fees (most transactions are free)
