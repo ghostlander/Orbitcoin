@@ -620,7 +620,7 @@ bool AppInit2()
     printf("Using miniUPnP Client v%s API v%d\n", MINIUPNPC_VERSION, MINIUPNPC_API_VERSION);
 #endif
     if(!fLogTimestamps)
-        printf("Launch time: %s\n", DateTimeStrFormat("%x %H:%M:%S", GetTime()).c_str());
+      printf("Launch time: %s\n", DateTimeStrFormat(GetTime()).c_str());
     printf("The default data directory is %s\n", GetDefaultDataDir().string().c_str());
     printf("Set up for a data directory of %s\n", strDataDir.c_str());
     std::ostringstream strErrors;

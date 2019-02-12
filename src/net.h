@@ -146,6 +146,7 @@ public:
     std::string strSubVer;
     bool fInbound;
     int64 nReleaseTime;
+    uint nPingTime;
     int nStartingHeight;
     uint64 nTxBytes;
     uint64 nRxBytes;
@@ -200,9 +201,12 @@ public:
     int64 nReleaseTime;
     std::map<uint256, CRequestTracker> mapRequests;
     CCriticalSection cs_mapRequests;
-    uint256 hashContinue;
-    uint nLastGetblocksAsked;
-    uint nLastGetblocksReceived;
+    uint nGetblocksAskTime;
+    uint nGetblocksReceiveTime;
+    uint nGetheadersReceiveTime;
+    uint nPingTime;
+    int64 nPingStamp;
+    int64 nPongStamp;
     int nStartingHeight;
 
     // flood relay
@@ -242,9 +246,12 @@ public:
         fDisconnect = false;
         nRefCount = 0;
         nReleaseTime = 0;
-        hashContinue = 0;
-        nLastGetblocksAsked = 0;
-        nLastGetblocksReceived = 0;
+        nGetblocksAskTime = 0;
+        nGetblocksReceiveTime = 0;
+        nGetheadersReceiveTime = 0;
+        nPingTime = 0;
+        nPingStamp = 0;
+        nPongStamp = 0;
         nStartingHeight = -1;
         fGetAddr = false;
         nMisbehavior = 0;

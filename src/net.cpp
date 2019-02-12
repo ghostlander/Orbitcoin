@@ -27,7 +27,7 @@
 using namespace std;
 using namespace boost;
 
-static const int MAX_OUTBOUND_CONNECTIONS = 16;
+static const int MAX_OUTBOUND_CONNECTIONS = 32;
 
 extern unsigned int nMsgSleep;
 
@@ -98,12 +98,15 @@ void CNode::PushGetBlocks(CBlockIndex *pindexBegin, uint256 hashEnd) {
     uint nCurrentTime = (uint)GetTime();
 
     /* Time limit for asking a particular peer */
-    if((nCurrentTime - 5U) < nLastGetblocksAsked)
+    if((nCurrentTime - 5U) < nGetblocksAskTime)
       return;
     else
-      nLastGetblocksAsked = nCurrentTime;
+      nGetblocksAskTime = nCurrentTime;
 
     PushMessage("getblocks", CBlockLocator(pindexBegin), hashEnd);
+
+    printf("getblocks height %d sent to peer %s\n",
+      pindexBegin->nHeight, addr.ToString().c_str());
 }
 
 // find 'best' local address for a particular peer
@@ -654,6 +657,7 @@ void CNode::copyStats(CNodeStats &stats)
     X(strSubVer);
     X(fInbound);
     X(nReleaseTime);
+    X(nPingTime);
     X(nStartingHeight);
     X(nTxBytes);
     X(nRxBytes);
@@ -1706,10 +1710,11 @@ void ThreadMessageHandler2(void* parg)
                 pnode->AddRef();
         }
 
-        // Poll the connected nodes for messages
-        CNode* pnodeTrickle = NULL;
-        if (!vNodesCopy.empty())
-            pnodeTrickle = vNodesCopy[GetRand(vNodesCopy.size())];
+        /* Random peer */
+        CNode *pnodeTrickle = NULL;
+        if(!vNodesCopy.empty())
+          pnodeTrickle = vNodesCopy[GetRand(vNodesCopy.size())];
+
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
         {
             // Receive messages
