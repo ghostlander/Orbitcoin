@@ -2554,9 +2554,8 @@ bool CBlock::AcceptBlock(CDiskBlockPos *dbp) {
     return true;
 }
 
-uint256 CBlockIndex::GetBlockTrust() const
-{
-    CBigNum bnTarget;
+uint256 CBlockIndex::GetBlockTrust() const {
+    CBigNum bnTarget, bnTemp;
     bnTarget.SetCompact(nBits);
 
     if(bnTarget <= 0) return 0;
@@ -2566,8 +2565,10 @@ uint256 CBlockIndex::GetBlockTrust() const
     /* First protocol (PPC style) */
 
     if((fTestNet && (time < nTestnetForkOneTime)) ||
-      (!fTestNet && (time < nForkTwoTime)))
-        return (IsProofOfStake()? ((CBigNum(1)<<256) / (bnTarget+1)).getuint256() : 1);
+      (!fTestNet && (time < nForkTwoTime))) {
+        bnTemp = (CBigNum(1) << 256) / (bnTarget + 1);
+        return(IsProofOfStake() ? bnTemp.getuint256() : 1);
+    }
 
     /* Third protocol (ORB style) */
 
@@ -2579,7 +2580,8 @@ uint256 CBlockIndex::GetBlockTrust() const
         if(IsProofOfWork()) {
 
             /* Difficulty is the trust base for PoW */
-            uint256 nBaseTrust = ((bnProofOfWorkLimit + 1) / (bnTarget + 1)).getuint256();
+            bnTemp = (bnProofOfWorkLimit + 1) / (bnTarget + 1);
+            uint256 nBaseTrust = bnTemp.getuint256();
 
             /* Simple trust for the first 10 blocks */
             if(!pprev || (pprev->nHeight < 10))
@@ -2630,12 +2632,14 @@ uint256 CBlockIndex::GetBlockTrust() const
                 /* PoS following at least one PoS */
                 if(pindexP2->IsProofOfWork()) {
                     /* 150% of trust for PoW->PoS->[PoS] */
-                    nBlockTrust = (CBigNum(nPrevTrust) * 3 / 4).getuint256();
+                    bnTemp = CBigNum(nPrevTrust) * 3 / 4;
+                    nBlockTrust = bnTemp.getuint256();
                 } else {
                     /* PoS following at least two PoS */
                     if(pindexP3->IsProofOfWork()) {
                         /* 100% of trust for PoW->PoS->PoS->[PoS] */
-                        nBlockTrust = (CBigNum(nPrevTrust) * 2 / 3).getuint256();
+                        bnTemp = CBigNum(nPrevTrust) * 2 / 3;
+                        nBlockTrust = bnTemp.getuint256();
                     } else {
                         /* PoS following at least three PoS */
                         const CBlockIndex *pindexP4 = pindexP3->pprev;
@@ -2661,72 +2665,78 @@ uint256 CBlockIndex::GetBlockTrust() const
     /* Second protocol (NVC style) */
 
     // Calculate work amount for block
-    uint256 nPoWTrust = (CBigNum(nPoWBase) / (bnTarget+1)).getuint256();
+    bnTemp = CBigNum(nPoWBase) / (bnTarget + 1);
+    uint256 nPoWTrust = bnTemp.getuint256();
 
     // Set nPowTrust to 1 if we are checking PoS block or PoW difficulty is too low
     nPoWTrust = (IsProofOfStake() || nPoWTrust < 1) ? 1 : nPoWTrust;
 
     // Return nPoWTrust for the first 12 blocks
-    if (pprev == NULL || pprev->nHeight < 12)
-        return nPoWTrust;
+    if(!pprev || (pprev->nHeight < 12))
+      return(nPoWTrust);
 
-    const CBlockIndex* currentIndex = pprev;
+    const CBlockIndex *currentIndex = pprev;
 
-    if(IsProofOfStake())
-    {
-        CBigNum bnNewTrust = (CBigNum(1)<<256) / (bnTarget+1);
+    if(IsProofOfStake()) {
+
+        CBigNum bnNewTrust = (CBigNum(1) << 256) / (bnTarget + 1);
 
         // Return 1/3 of score if parent block is not the PoW block
-        if (!pprev->IsProofOfWork())
-            return (bnNewTrust / 3).getuint256();
+        if(pprev->IsProofOfStake()) {
+            bnTemp = bnNewTrust / 3;
+            return(bnTemp.getuint256());
+        }
 
         int nPoWCount = 0;
 
         // Check last 12 blocks type
-        while (pprev->nHeight - currentIndex->nHeight < 12)
-        {
-            if (currentIndex->IsProofOfWork())
-                nPoWCount++;
+        while((pprev->nHeight - currentIndex->nHeight) < 12) {
+            if(currentIndex->IsProofOfWork())
+              nPoWCount++;
             currentIndex = currentIndex->pprev;
         }
 
         // Return 1/3 of score if less than 3 PoW blocks found
-        if (nPoWCount < 3)
-            return (bnNewTrust / 3).getuint256();
+        if(nPoWCount < 3) {
+            bnTemp = bnNewTrust / 3;
+            return(bnTemp.getuint256());
+        }
 
-        return bnNewTrust.getuint256();
-    }
-    else
-    {
+        return(bnNewTrust.getuint256());
+
+    } else {
+
         CBigNum bnLastBlockTrust = CBigNum(pprev->nChainTrust - pprev->pprev->nChainTrust);
 
         // Return nPoWTrust + 2/3 of previous block score if two parent blocks are not PoS blocks
-        if (!(pprev->IsProofOfStake() && pprev->pprev->IsProofOfStake()))
-            return nPoWTrust + (2 * bnLastBlockTrust / 3).getuint256();
+        if(!(pprev->IsProofOfStake() && pprev->pprev->IsProofOfStake())) {
+            bnTemp = 2 * bnLastBlockTrust / 3;
+            return(nPoWTrust + bnTemp.getuint256());
+        }
 
         int nPoSCount = 0;
 
         // Check last 12 blocks type
-        while (pprev->nHeight - currentIndex->nHeight < 12)
-        {
-            if (currentIndex->IsProofOfStake())
-                nPoSCount++;
+        while((pprev->nHeight - currentIndex->nHeight) < 12) {
+            if(currentIndex->IsProofOfStake())
+              nPoSCount++;
             currentIndex = currentIndex->pprev;
         }
 
         // Return nPoWTrust + 2/3 of previous block score if less than 7 PoS blocks found
-        if (nPoSCount < 7)
-            return nPoWTrust + (2 * bnLastBlockTrust / 3).getuint256();
+        if(nPoSCount < 7) {
+            bnTemp = 2 * bnLastBlockTrust / 3;
+            return(nPoWTrust + bnTemp.getuint256());
+        }
 
         bnTarget.SetCompact(pprev->nBits);
 
-        if (bnTarget <= 0)
-            return 0;
+        if(bnTarget <= 0) return(0);
 
-        CBigNum bnNewTrust = (CBigNum(1)<<256) / (bnTarget+1);
+        CBigNum bnNewTrust = (CBigNum(1) << 256) / (bnTarget + 1);
 
         // Return nPoWTrust + full trust score for previous block nBits
-        return nPoWTrust + bnNewTrust.getuint256();
+        return(nPoWTrust + bnNewTrust.getuint256());
     }
 }
 

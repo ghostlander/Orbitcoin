@@ -337,8 +337,12 @@ bool CheckStakeKernelHash(uint nBits, const CBlock& blockFrom, uint nTxPrevOffse
 
     uint256 hashBlockFrom = blockFrom.GetHash();
 
-    CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64)txPrev.nTime, (int64)nTimeTx) / COIN / (24 * 60 * 60);
-    targetProofOfStake = (bnCoinDayWeight * bnTargetPerCoinDay).getuint256();
+    CBigNum bnCoinDayWeight = CBigNum(nValueIn) *
+      GetWeight((int64)txPrev.nTime, (int64)nTimeTx) / COIN / (24 * 60 * 60);
+
+    CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
+
+    targetProofOfStake = bnTargetProofOfStake.getuint256();
 
     // Calculate hash
     CDataStream ss(SER_GETHASH, 0);

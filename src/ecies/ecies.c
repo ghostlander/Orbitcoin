@@ -16,6 +16,8 @@
  *
  */
 
+#include <string.h> /* for memset() */
+
 #include "ecies.h"
 
 static EC_KEY *ecies_key_create(const EC_KEY *user, char *error) {
@@ -172,22 +174,23 @@ secure_t *ecies_encrypt(const ecies_ctx_t *ctx, const unsigned char *data, size_
 
     unsigned char iv[EVP_MAX_IV_LENGTH];
     unsigned char *body = secure_body_data(cryptex);
-    EVP_CIPHER_CTX cipher;
+
+    EVP_CIPHER_CTX *cipher = EVP_CIPHER_CTX_new();
+    if(!cipher) return(NULL);
+    EVP_CIPHER_CTX_init(cipher);
 
     memset(iv, 0, EVP_MAX_IV_LENGTH);
 
-    EVP_CIPHER_CTX_init(&cipher);
-
-    if(EVP_EncryptInit_ex(&cipher, ctx->cipher, NULL, envelope_key, iv) != 1) {
+    if(EVP_EncryptInit_ex(cipher, ctx->cipher, NULL, envelope_key, iv) != 1) {
         sprintf(error, "Initial context encryption failed");
         status = 0;
     } else {
-        if(EVP_EncryptUpdate(&cipher, body, (int *) &output_length, data, length) != 1) {
+        if(EVP_EncryptUpdate(cipher, body, (int *) &output_length, data, length) != 1) {
             sprintf(error, "Context encryption failed");
             status = 0;
         } else {
             encrypted_length = output_length;
-            if(EVP_EncryptFinal_ex(&cipher, body + encrypted_length, (int *) &output_length) != 1) {
+            if(EVP_EncryptFinal_ex(cipher, body + encrypted_length, (int *) &output_length) != 1) {
                 sprintf(error, "Final context encryption failed");
                 status = 0;
             } else {
@@ -200,7 +203,8 @@ secure_t *ecies_encrypt(const ecies_ctx_t *ctx, const unsigned char *data, size_
         }
     }
 
-    EVP_CIPHER_CTX_cleanup(&cipher);
+    EVP_CIPHER_CTX_cleanup(cipher);
+    EVP_CIPHER_CTX_free(cipher);
 
     if(!status) {
         secure_free(cryptex);
@@ -209,20 +213,27 @@ secure_t *ecies_encrypt(const ecies_ctx_t *ctx, const unsigned char *data, size_
 
     /* Stage 3: HMAC generation */
 
-    HMAC_CTX hmac;
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    HMAC_CTX hmac_object;
+    HMAC_CTX *hmac = (HMAC_CTX *) &hmac_object;
+    if(!hmac) return(NULL);
+    HMAC_CTX_init(hmac);
+#else
+    HMAC_CTX *hmac = HMAC_CTX_new();
+    if(!hmac) return(NULL);
+    HMAC_CTX_reset(hmac);
+#endif
 
     const size_t key_offset = EVP_CIPHER_key_length(ctx->cipher);
     const size_t key_length = EVP_MD_size(ctx->md);
     const size_t mac_length = secure_mac_length(cryptex);
 
-    HMAC_CTX_init(&hmac);
-
     /* Generate an authenticated hash which can be used to validate the 
      * data during decryption */
 
-    if((HMAC_Init_ex(&hmac, envelope_key + key_offset, key_length, ctx->md, NULL) != 1) ||
-      (HMAC_Update(&hmac, secure_body_data(cryptex), secure_body_length(cryptex)) != 1) ||
-      (HMAC_Final(&hmac, secure_mac_data(cryptex), &output_length) != 1)) {
+    if((HMAC_Init_ex(hmac, envelope_key + key_offset, key_length, ctx->md, NULL) != 1) ||
+      (HMAC_Update(hmac, secure_body_data(cryptex), secure_body_length(cryptex)) != 1) ||
+      (HMAC_Final(hmac, secure_mac_data(cryptex), &output_length) != 1)) {
         sprintf(error, "Unable to generate a HMAC tag");
         status = 0;
     } else {
@@ -232,7 +243,12 @@ secure_t *ecies_encrypt(const ecies_ctx_t *ctx, const unsigned char *data, size_
         }
     }
 
-    HMAC_CTX_cleanup(&hmac);
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    HMAC_CTX_cleanup(hmac);
+#else
+    HMAC_CTX_reset(hmac);
+    HMAC_CTX_free(hmac);
+#endif
 
     if(!status) {
         secure_free(cryptex);
@@ -302,7 +318,17 @@ unsigned char *ecies_decrypt(const ecies_ctx_t *ctx, const secure_t *cryptex, si
     /* Stage 2: HMAC verification */
 
     unsigned char md[EVP_MAX_MD_SIZE];
-    HMAC_CTX hmac;
+
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    HMAC_CTX hmac_object;
+    HMAC_CTX *hmac = (HMAC_CTX *) &hmac_object;
+    if(!hmac) return(NULL);
+    HMAC_CTX_init(hmac);
+#else
+    HMAC_CTX *hmac = HMAC_CTX_new();
+    if(!hmac) return(NULL);
+    HMAC_CTX_reset(hmac);
+#endif
 
     const size_t key_offset = EVP_CIPHER_key_length(ctx->cipher);
     const size_t key_length = EVP_MD_size(ctx->md);
@@ -311,11 +337,9 @@ unsigned char *ecies_decrypt(const ecies_ctx_t *ctx, const secure_t *cryptex, si
     /* Use the authenticated hash of the ciphered data to ensure it was not 
      * modified after being encrypted */
 
-    HMAC_CTX_init(&hmac);
-
-    if((HMAC_Init_ex(&hmac, envelope_key + key_offset, key_length, ctx->md, NULL) != 1) ||
-      (HMAC_Update(&hmac, secure_body_data(cryptex), secure_body_length(cryptex)) != 1) ||
-      (HMAC_Final(&hmac, md, &output_length) != 1)) {
+    if((HMAC_Init_ex(hmac, envelope_key + key_offset, key_length, ctx->md, NULL) != 1) ||
+      (HMAC_Update(hmac, secure_body_data(cryptex), secure_body_length(cryptex)) != 1) ||
+      (HMAC_Final(hmac, md, &output_length) != 1)) {
         sprintf(error, "Unable to generate a HMAC tag");
         status = 0;
     } else {
@@ -326,7 +350,12 @@ unsigned char *ecies_decrypt(const ecies_ctx_t *ctx, const secure_t *cryptex, si
         }
     }
 
-    HMAC_CTX_cleanup(&hmac);
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    HMAC_CTX_cleanup(hmac);
+#else
+    HMAC_CTX_reset(hmac);
+    HMAC_CTX_free(hmac);
+#endif
 
     if(!status) return(NULL);
 
@@ -336,7 +365,10 @@ unsigned char *ecies_decrypt(const ecies_ctx_t *ctx, const secure_t *cryptex, si
 
     unsigned char iv[EVP_MAX_IV_LENGTH];
     unsigned char *output;
-    EVP_CIPHER_CTX cipher;
+
+    EVP_CIPHER_CTX *cipher = EVP_CIPHER_CTX_new();
+    if(!cipher) return(NULL);
+    EVP_CIPHER_CTX_init(cipher);
 
     const size_t body_length = secure_body_length(cryptex);
 
@@ -348,19 +380,17 @@ unsigned char *ecies_decrypt(const ecies_ctx_t *ctx, const secure_t *cryptex, si
     memset(iv, 0, EVP_MAX_IV_LENGTH);
     memset(output, 0, body_length + 1);
 
-    EVP_CIPHER_CTX_init(&cipher);
-
-    if(EVP_DecryptInit_ex(&cipher, ctx->cipher, NULL, envelope_key, iv) != 1) {
+    if(EVP_DecryptInit_ex(cipher, ctx->cipher, NULL, envelope_key, iv) != 1) {
         sprintf(error, "Initial context decryption failed");
         status = 0;
     } else {
-        if(EVP_DecryptUpdate(&cipher, output, (int *) &output_length,
+        if(EVP_DecryptUpdate(cipher, output, (int *) &output_length,
           secure_body_data(cryptex), body_length) != 1) {
             sprintf(error, "Context decryption failed");
             status = 0;
         } else {
             decrypted_length = output_length;
-            if(EVP_DecryptFinal_ex(&cipher, output + decrypted_length,
+            if(EVP_DecryptFinal_ex(cipher, output + decrypted_length,
               (int *) &output_length) != 1) {
                 sprintf(error, "Final context decryption failed");
                 status = 0;
@@ -370,7 +400,8 @@ unsigned char *ecies_decrypt(const ecies_ctx_t *ctx, const secure_t *cryptex, si
         }
     }
 
-    EVP_CIPHER_CTX_cleanup(&cipher);
+    EVP_CIPHER_CTX_cleanup(cipher);
+    EVP_CIPHER_CTX_free(cipher);
 
     if(!status) {
         free(output);
