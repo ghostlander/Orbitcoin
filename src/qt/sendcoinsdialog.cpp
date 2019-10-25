@@ -6,7 +6,7 @@
 #include "addresstablemodel.h"
 #include "addressbookpage.h"
 
-#include "bitcoinunits.h"
+#include "coinunits.h"
 #include "addressbookpage.h"
 #include "optionsmodel.h"
 #include "sendcoinsentry.h"
@@ -47,7 +47,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 
     // Coin Control
-    ui->lineEditCoinControlChange->setFont(GUIUtil::bitcoinAddressFont());
+    ui->lineEditCoinControlChange->setFont(GUIUtil::AddressFont());
     connect(ui->pushButtonCoinControl, SIGNAL(clicked()), this, SLOT(coinControlButtonClicked()));
     connect(ui->checkBoxCoinControlChange, SIGNAL(stateChanged(int)), this, SLOT(coinControlChangeChecked(int)));
     connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
@@ -151,10 +151,10 @@ void SendCoinsDialog::on_sendButton_clicked()
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
 #if (QT_VERSION < 0x050000)
-        formatted.append(tr("<b>%1</b> to %2 (%3)").arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, rcp.amount),
+        formatted.append(tr("<b>%1</b> to %2 (%3)").arg(CoinUnits::formatWithUnit(CoinUnits::ORB, rcp.amount),
           Qt::escape(rcp.label), rcp.address));
 #else
-        formatted.append(tr("<b>%1</b> to %2 (%3)").arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, rcp.amount),
+        formatted.append(tr("<b>%1</b> to %2 (%3)").arg(CoinUnits::formatWithUnit(CoinUnits::ORB, rcp.amount),
           rcp.label.toHtmlEscaped(), rcp.address));
 #endif
     }
@@ -187,51 +187,50 @@ void SendCoinsDialog::on_sendButton_clicked()
     else
         sendstatus = model->sendCoins(txcomment, recipients, CoinControlDialog::coinControl);
 
-    switch(sendstatus.status)
-    {
-    case WalletModel::InvalidAddress:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("The recipient address is not valid, please recheck."),
-            QMessageBox::Ok, QMessageBox::Ok);
-        break;
-    case WalletModel::InvalidAmount:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("The amount to pay must be larger than 0."),
-            QMessageBox::Ok, QMessageBox::Ok);
-        break;
-    case WalletModel::AmountExceedsBalance:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("The amount exceeds your balance."),
-            QMessageBox::Ok, QMessageBox::Ok);
-        break;
-    case WalletModel::AmountWithFeeExceedsBalance:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("The total exceeds your balance when the %1 transaction fee is included.").
-            arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, sendstatus.fee)),
-            QMessageBox::Ok, QMessageBox::Ok);
-        break;
-    case WalletModel::DuplicateAddress:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("Duplicate address found, can only send to each address once per send operation."),
-            QMessageBox::Ok, QMessageBox::Ok);
-        break;
-    case WalletModel::TransactionCreationFailed:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("Error: Transaction creation failed."),
-            QMessageBox::Ok, QMessageBox::Ok);
-        break;
-    case WalletModel::TransactionCommitFailed:
-        QMessageBox::warning(this, tr("Send Coins"),
-            tr("Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."),
-            QMessageBox::Ok, QMessageBox::Ok);
-        break;
-    case WalletModel::Aborted: // User aborted, nothing to do
-        break;
-    case WalletModel::OK:
-        accept();
-        CoinControlDialog::coinControl->UnSelectAll();
-        coinControlUpdateLabels();
-        break;
+    switch(sendstatus.status) {
+        case(WalletModel::InvalidAddress):
+            QMessageBox::warning(this, tr("Send"),
+              tr("The recipient address is not valid, please recheck."),
+              QMessageBox::Ok, QMessageBox::Ok);
+            break;
+        case(WalletModel::InvalidAmount):
+            QMessageBox::warning(this, tr("Send"),
+              tr("The amount to pay must be larger than 0."),
+              QMessageBox::Ok, QMessageBox::Ok);
+            break;
+        case(WalletModel::AmountExceedsBalance):
+            QMessageBox::warning(this, tr("Send"),
+              tr("The amount exceeds your balance."),
+              QMessageBox::Ok, QMessageBox::Ok);
+            break;
+        case(WalletModel::AmountWithFeeExceedsBalance):
+            QMessageBox::warning(this, tr("Send"),
+              tr("The total exceeds your balance when the %1 transaction fee is included.") \
+              .arg(CoinUnits::formatWithUnit(CoinUnits::ORB, sendstatus.fee)),
+              QMessageBox::Ok, QMessageBox::Ok);
+            break;
+        case(WalletModel::DuplicateAddress):
+            QMessageBox::warning(this, tr("Send"),
+              tr("Duplicate address found, can only send to each address once per send operation."),
+              QMessageBox::Ok, QMessageBox::Ok);
+            break;
+        case(WalletModel::TransactionCreationFailed):
+            QMessageBox::warning(this, tr("Send"),
+              tr("Error: payment failed!"),
+              QMessageBox::Ok, QMessageBox::Ok);
+            break;
+        case(WalletModel::TransactionCommitFailed):
+            QMessageBox::warning(this, tr("Send"),
+              tr("Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here."),
+              QMessageBox::Ok, QMessageBox::Ok);
+            break;
+        case(WalletModel::Aborted):
+            break;
+        case(WalletModel::OK):
+            accept();
+            CoinControlDialog::coinControl->UnSelectAll();
+            coinControlUpdateLabels();
+            break;
     }
     fNewRecipientAllowed = true;
 }
@@ -346,20 +345,17 @@ void SendCoinsDialog::pasteEntry(const SendCoinsRecipient &rv)
     entry->setValue(rv);
 }
 
-bool SendCoinsDialog::handleURI(const QString &uri)
-{
+bool SendCoinsDialog::handleURI(const QString &uri) {
     SendCoinsRecipient rv;
-    // URI has to be valid
-    if (GUIUtil::parseBitcoinURI(uri, &rv))
-    {
-        CBitcoinAddress address(rv.address.toStdString());
-        if (!address.IsValid())
-            return false;
+
+    if(GUIUtil::parseCoinURI(uri, &rv)) {
+        CCoinAddress address(rv.address.toStdString());
+        if(!address.IsValid()) return(false);
         pasteEntry(rv);
-        return true;
+        return(true);
     }
 
-    return false;
+    return(false);
 }
 
 void SendCoinsDialog::setBalance(qint64 balance, qint64 stake, qint64 unconfirmed, qint64 immature)
@@ -371,7 +367,7 @@ void SendCoinsDialog::setBalance(qint64 balance, qint64 stake, qint64 unconfirme
         return;
 
     int unit = model->getOptionsModel()->getDisplayUnit();
-    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
+    ui->labelBalance->setText(CoinUnits::formatWithUnit(unit, balance));
 }
 
 void SendCoinsDialog::updateDisplayUnit()
@@ -379,7 +375,7 @@ void SendCoinsDialog::updateDisplayUnit()
     if(model && model->getOptionsModel())
     {
         // Update labelBalance with the current balance and the current unit
-        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->getBalance()));
+        ui->labelBalance->setText(CoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->getBalance()));
     }
 }
 
@@ -454,10 +450,12 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
 {
     if (model)
     {
-        if (state == Qt::Checked)
-            CoinControlDialog::coinControl->destChange = CBitcoinAddress(ui->lineEditCoinControlChange->text().toStdString()).Get();
-        else
+        if(state == Qt::Checked) {
+            CoinControlDialog::coinControl->destChange =
+              CCoinAddress(ui->lineEditCoinControlChange->text().toStdString()).Get();
+        } else {
             CoinControlDialog::coinControl->destChange = CNoDestination();
+        }
     }
 
     ui->lineEditCoinControlChange->setEnabled((state == Qt::Checked));
@@ -465,35 +463,29 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
 }
 
 // Coin Control: custom change address changed
-void SendCoinsDialog::coinControlChangeEdited(const QString & text)
-{
-    if (model)
-    {
-        CoinControlDialog::coinControl->destChange = CBitcoinAddress(text.toStdString()).Get();
+void SendCoinsDialog::coinControlChangeEdited(const QString &text) {
+
+    if(model) {
+        CoinControlDialog::coinControl->destChange = CCoinAddress(text.toStdString()).Get();
 
         // label for the change address
         ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:black;}");
-        if (text.isEmpty())
+        if(text.isEmpty()) {
             ui->labelCoinControlChangeLabel->setText("");
-        else if (!CBitcoinAddress(text.toStdString()).IsValid())
-        {
+        } else if(!CCoinAddress(text.toStdString()).IsValid()) {
             ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:red;}");
-            ui->labelCoinControlChangeLabel->setText(tr("WARNING: Invalid Bitcoin address"));
-        }
-        else
-        {
+            ui->labelCoinControlChangeLabel->setText(tr("Warning: invalid Orbitcoin address"));
+        } else {
             QString associatedLabel = model->getAddressTableModel()->labelForAddress(text);
-            if (!associatedLabel.isEmpty())
+            if(!associatedLabel.isEmpty()) {
                 ui->labelCoinControlChangeLabel->setText(associatedLabel);
-            else
-            {
+            } else {
                 CPubKey pubkey;
                 CKeyID keyid;
-                CBitcoinAddress(text.toStdString()).GetKeyID(keyid);   
-                if (model->getPubKey(keyid, pubkey))
+                CCoinAddress(text.toStdString()).GetKeyID(keyid);
+                if(model->getPubKey(keyid, pubkey)) {
                     ui->labelCoinControlChangeLabel->setText(tr("(no label)"));
-                else
-                {
+                } else {
                     ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:red;}");
                     ui->labelCoinControlChangeLabel->setText(tr("WARNING: unknown change address"));
                 }

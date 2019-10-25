@@ -5,7 +5,7 @@
 #include "guiutil.h"
 
 #ifndef Q_MOC_RUN
-#include "bitcoinrpc.h"
+#include "rpc.h"
 #endif
 
 #include <QTime>

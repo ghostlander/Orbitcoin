@@ -2,8 +2,9 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_WALLET_H
-#define BITCOIN_WALLET_H
+
+#ifndef WALLET_H
+#define WALLET_H
 
 #include <string>
 #include <vector>
@@ -881,4 +882,4 @@ private:
 
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 
-#endif
+#endif /* WALLET_H */

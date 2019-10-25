@@ -94,7 +94,7 @@ OBJS= \
     obj/main.o \
     obj/net.o \
     obj/protocol.o \
-    obj/bitcoinrpc.o \
+    obj/rpc.o \
     obj/rpccrypto.o \
     obj/rpcdump.o \
     obj/rpcnet.o \

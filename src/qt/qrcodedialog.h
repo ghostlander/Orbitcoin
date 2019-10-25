@@ -38,4 +38,4 @@ private:
     QString getURI();
 };
 
-#endif // QRCODEDIALOG_H
+#endif /* QRCODEDIALOG_H */

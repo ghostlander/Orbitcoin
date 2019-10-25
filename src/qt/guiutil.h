@@ -15,25 +15,24 @@ class QAbstractItemView;
 QT_END_NAMESPACE
 class SendCoinsRecipient;
 
-/** Utility functions used by the Bitcoin Qt UI.
- */
-namespace GUIUtil
-{
+/* Utility functions used by the Orbitcoin Qt UI*/
+namespace GUIUtil {
+
     // Create human-readable string from date
     QString dateTimeStr(const QDateTime &datetime);
     QString dateTimeStr(qint64 nTime);
 
-    // Render Bitcoin addresses in monospace font
-    QFont bitcoinAddressFont();
+    /* Render Orbitcoin addresses in monospace font */
+    QFont AddressFont();
 
     // Set up widgets for address and amounts
     void setupAddressWidget(QLineEdit *widget, QWidget *parent);
     void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
-    // Parse "orbitcoin:" URI into recipient object, return true on successful parsing
-    // See Bitcoin URI definition discussion here: https://bitcointalk.org/index.php?topic=33490.0
-    bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
-    bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
+    /* Parse "orbitcoin:" URI into recipient object, return true on successful parsing
+     * See URI definition discussion here: https://bitcointalk.org/index.php?topic=33490.0 */
+    bool parseCoinURI(const QUrl &uri, SendCoinsRecipient *out);
+    bool parseCoinURI(QString uri, SendCoinsRecipient *out);
 
     // HTML escaping for rich text controls
     QString HtmlEscape(const QString& str, bool fMultiLine=false);
@@ -95,9 +94,8 @@ namespace GUIUtil
     bool GetStartOnSystemStartup();
     bool SetStartOnSystemStartup(bool fAutoStart);
 
-    /** Help message for Bitcoin-Qt, shown with --help. */
-    class HelpMessageBox : public QMessageBox
-    {
+    /* Help message for Orbitcoin-Qt, shown with --help. */
+    class HelpMessageBox : public QMessageBox {
         Q_OBJECT
 
     public:
@@ -117,4 +115,4 @@ namespace GUIUtil
 
 } // namespace GUIUtil
 
-#endif // GUIUTIL_H
+#endif /* GUIUTIL_H */

@@ -2,7 +2,7 @@
 #include "ui_overviewpage.h"
 
 #include "walletmodel.h"
-#include "bitcoinunits.h"
+#include "coinunits.h"
 #include "optionsmodel.h"
 #include "transactiontablemodel.h"
 #include "transactionfilterproxy.h"
@@ -19,10 +19,7 @@ class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    TxViewDelegate(): QAbstractItemDelegate(), unit(BitcoinUnits::BTC)
-    {
-
-    }
+    TxViewDelegate(): QAbstractItemDelegate(), unit(CoinUnits::ORB) { }
 
     inline void paint(QPainter *painter, const QStyleOptionViewItem &option,
                       const QModelIndex &index ) const
@@ -71,7 +68,7 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-        QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true);
+        QString amountText = CoinUnits::formatWithUnit(unit, amount, true);
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");
@@ -139,11 +136,12 @@ void OverviewPage::setBalance(qint64 balance, qint64 stake, qint64 unconfirmed, 
     currentUnconfirmed = unconfirmed;
     currentImmature    = immature;
 
-    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
-    ui->labelStake->setText(BitcoinUnits::formatWithUnit(unit, stake));
-    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmed));
-    ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, immature));
-    ui->labelConsolidated->setText(BitcoinUnits::formatWithUnit(unit, (balance + stake + unconfirmed + immature)));
+    ui->labelBalance->setText(CoinUnits::formatWithUnit(unit, balance));
+    ui->labelStake->setText(CoinUnits::formatWithUnit(unit, stake));
+    ui->labelUnconfirmed->setText(CoinUnits::formatWithUnit(unit, unconfirmed));
+    ui->labelImmature->setText(CoinUnits::formatWithUnit(unit, immature));
+    ui->labelConsolidated->setText(CoinUnits::formatWithUnit(unit,
+      (balance + stake + unconfirmed + immature)));
 
     /* Do not show a non-existing balance if zero, but show the text to avoid an empty row */
 
@@ -193,7 +191,7 @@ void OverviewPage::setModel(WalletModel *model)
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
     }
 
-    // update the display unit, to not use the default ("BTC")
+    /* Update the display unit, to not use the default ("ORB") */
     updateDisplayUnit();
 }
 

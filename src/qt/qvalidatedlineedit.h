@@ -26,4 +26,4 @@ private slots:
     void markValid();
 };
 
-#endif // QVALIDATEDLINEEDIT_H
+#endif /* QVALIDATEDLINEEDIT_H */

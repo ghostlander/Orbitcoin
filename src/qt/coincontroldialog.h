@@ -85,4 +85,4 @@ private slots:
     void buttonSelectAllClicked();
 };
 
-#endif // COINCONTROLDIALOG_H
+#endif /* COINCONTROLDIALOG_H */

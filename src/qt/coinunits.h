@@ -1,25 +1,21 @@
-#ifndef BITCOINUNITS_H
-#define BITCOINUNITS_H
+#ifndef COINUNITS_H
+#define COINUNITS_H
 
 #include <QString>
 #include <QAbstractListModel>
 
-/** Bitcoin unit definitions. Encapsulates parsing and formatting
-   and serves as list model for drop-down selection boxes.
-*/
-class BitcoinUnits: public QAbstractListModel
-{
-public:
-    explicit BitcoinUnits(QObject *parent);
+/* Coin unit definitions. Encapsulates parsing and formatting
+ * and serves as list model for drop-down selection boxes. */
+class CoinUnits: public QAbstractListModel {
+    Q_OBJECT
 
-    /** Bitcoin units.
-      @note Source: https://en.bitcoin.it/wiki/Units . Please add only sensible ones
-     */
-    enum Unit
-    {
-        BTC,
-        mBTC,
-        uBTC
+public:
+    explicit CoinUnits(QObject *parent);
+
+    enum Unit {
+        ORB,
+        mORB,
+        uORB
     };
 
     //! @name Static API
@@ -59,8 +55,8 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     ///@}
 private:
-    QList<BitcoinUnits::Unit> unitlist;
+    QList<CoinUnits::Unit> unitlist;
 };
-typedef BitcoinUnits::Unit BitcoinUnit;
+typedef CoinUnits::Unit CoinUnit;
 
-#endif // BITCOINUNITS_H
+#endif /* COINUNITS_H */

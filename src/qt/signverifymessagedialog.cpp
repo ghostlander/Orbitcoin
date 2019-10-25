@@ -41,8 +41,8 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget *parent) :
     ui->messageIn_VM->installEventFilter(this);
     ui->signatureIn_VM->installEventFilter(this);
 
-    ui->signatureOut_SM->setFont(GUIUtil::bitcoinAddressFont());
-    ui->signatureIn_VM->setFont(GUIUtil::bitcoinAddressFont());
+    ui->signatureOut_SM->setFont(GUIUtil::AddressFont());
+    ui->signatureIn_VM->setFont(GUIUtil::AddressFont());
 }
 
 SignVerifyMessageDialog::~SignVerifyMessageDialog()
@@ -105,7 +105,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
     /* Clear old signature to ensure users don't get confused on error with an old signature displayed */
     ui->signatureOut_SM->clear();
 
-    CBitcoinAddress addr(ui->addressIn_SM->text().toStdString());
+    CCoinAddress addr(ui->addressIn_SM->text().toStdString());
     if (!addr.IsValid())
     {
         ui->addressIn_SM->setValid(false);
@@ -184,9 +184,9 @@ void SignVerifyMessageDialog::on_addressBookButton_VM_clicked()
     }
 }
 
-void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
-{
-    CBitcoinAddress addr(ui->addressIn_VM->text().toStdString());
+void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked() {
+
+    CCoinAddress addr(ui->addressIn_VM->text().toStdString());
     if (!addr.IsValid())
     {
         ui->addressIn_VM->setValid(false);
@@ -227,8 +227,7 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
         return;
     }
 
-    if (!(CBitcoinAddress(key.GetPubKey().GetID()) == addr))
-    {
+    if(!(CCoinAddress(key.GetPubKey().GetID()) == addr)) {
         ui->statusLabel_VM->setStyleSheet("QLabel { color: red; }");
         ui->statusLabel_VM->setText(QString("<nobr>") + tr("Message verification failed.") + QString("</nobr>"));
         return;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 John Doering <ghostlander@orbitcoin.org>
+ * Copyright (c) 2018-2019 John Doering <ghostlander@orbitcoin.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-#include "bitcoinrpc.h"
+#include "rpc.h"
 #include "init.h"
 #include "util.h"
 #include "base58.h"
@@ -45,7 +45,7 @@ Value encryptmessage(const Array &params, bool fHelp) {
     if(IsHex(params[0].get_str())) {
         pubKey = ParseHex(params[0].get_str());
     } else {
-        CBitcoinAddress addr(params[0].get_str());
+        CCoinAddress addr(params[0].get_str());
         if(addr.IsValid()) {
             CKeyID keyID;
             addr.GetKeyID(keyID);
@@ -72,7 +72,7 @@ Value decryptmessage(const Array &params, bool fHelp) {
     EnsureWalletIsUnlocked();
 
     CKey key;
-    CBitcoinAddress addr(params[0].get_str());
+    CCoinAddress addr(params[0].get_str());
 
     if(addr.IsValid()) {
         CKeyID keyID;
@@ -80,7 +80,7 @@ Value decryptmessage(const Array &params, bool fHelp) {
         if(!pwalletMain->GetKey(keyID, key))
           throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key not found for this address"));
     } else {
-        CBitcoinSecret vchSecret;
+        CCoinSecret vchSecret;
         if(!vchSecret.SetString(params[0].get_str()))
           throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key"));
         bool fCompressed;
@@ -111,7 +111,7 @@ Value encryptdata(const Array &params, bool fHelp) {
     if(IsHex(params[0].get_str())) {
         pubKey = ParseHex(params[0].get_str());
     } else {
-        CBitcoinAddress addr(params[0].get_str());
+        CCoinAddress addr(params[0].get_str());
         if(addr.IsValid()) {
             CKeyID keyID;
             addr.GetKeyID(keyID);
@@ -137,7 +137,7 @@ Value decryptdata(const Array &params, bool fHelp) {
     EnsureWalletIsUnlocked();
 
     CKey key;
-    CBitcoinAddress addr(params[0].get_str());
+    CCoinAddress addr(params[0].get_str());
 
     if(addr.IsValid()) {
         CKeyID keyID;
@@ -145,7 +145,7 @@ Value decryptdata(const Array &params, bool fHelp) {
         if(!pwalletMain->GetKey(keyID, key))
           throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key not found for this address"));
     } else {
-        CBitcoinSecret vchSecret;
+        CCoinSecret vchSecret;
         if(!vchSecret.SetString(params[0].get_str()))
           throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key"));
         bool fCompressed;

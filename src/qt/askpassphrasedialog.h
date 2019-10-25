@@ -43,4 +43,4 @@ private slots:
     bool eventFilter(QObject *, QEvent *event);
 };
 
-#endif // ASKPASSPHRASEDIALOG_H
+#endif /* ASKPASSPHRASEDIALOG_H */

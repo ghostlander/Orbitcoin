@@ -14,4 +14,4 @@ protected:
   virtual void  keyPressEvent(QKeyEvent *event);
 };
 
-#endif // COINCONTROLTREEWIDGET_H
+#endif /* COINCONTROLTREEWIDGET_H */

@@ -41,4 +41,4 @@ private:
     QMenu *m_dockMenu;
 };
 
-#endif // MACDOCKICONCLICKHANDLER_H
+#endif /* MACDOCKICONCLICKHANDLER_H */

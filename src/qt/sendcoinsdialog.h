@@ -15,9 +15,8 @@ QT_BEGIN_NAMESPACE
 class QUrl;
 QT_END_NAMESPACE
 
-/** Dialog for sending bitcoins */
-class SendCoinsDialog : public QDialog
-{
+/* Dialogue for sending coins */
+class SendCoinsDialog : public QDialog {
     Q_OBJECT
 
 public:
@@ -65,4 +64,4 @@ private slots:
     void coinControlClipboardChange();
 };
 
-#endif // SENDCOINSDIALOG_H
+#endif /* SENDCOINSDIALOG_H */

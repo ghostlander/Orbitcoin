@@ -1,5 +1,5 @@
-#ifndef BITCOINFIELD_H
-#define BITCOINFIELD_H
+#ifndef AMOUNTFIELD_H
+#define AMOUNTFIELD_H
 
 #include <QWidget>
 
@@ -10,12 +10,11 @@ QT_END_NAMESPACE
 
 /** Widget for entering bitcoin amounts.
   */
-class BitcoinAmountField: public QWidget
-{
+class AmountField: public QWidget {
     Q_OBJECT
     Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY textChanged USER true)
 public:
-    explicit BitcoinAmountField(QWidget *parent = 0);
+    explicit AmountField(QWidget *parent = 0);
 
     qint64 value(bool *valid=0) const;
     void setValue(qint64 value);
@@ -56,5 +55,4 @@ private slots:
 
 };
 
-
-#endif // BITCOINFIELD_H
+#endif /* AMOUNTFIELD_H */

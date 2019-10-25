@@ -23,7 +23,7 @@
       </sizepolicy>
      </property>
      <property name="pixmap">
-      <pixmap resource="../bitcoin.qrc">:/images/about</pixmap>
+      <pixmap resource="../orbitcoin.qrc">:/images/about</pixmap>
      </property>
     </widget>
    </item>
@@ -95,7 +95,7 @@
 Copyright © 2009-2012 Bitcoin Developers
 Copyright © 2012-2013 Peercoin Developers
 Copyright © 2013-2014 NovaCoin Developers
-Copyright © 2013-2018 Orbitcoin Developers
+Copyright © 2013-2019 Orbitcoin Developers
         </string>
        </property>
        <property name="textInteractionFlags">
@@ -152,7 +152,7 @@ This product includes software developed by the OpenSSL Project for use in the O
   </layout>
  </widget>
  <resources>
-  <include location="../bitcoin.qrc"/>
+  <include location="../orbitcoin.qrc"/>
  </resources>
  <connections>
   <connection>

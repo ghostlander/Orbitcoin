@@ -5,12 +5,12 @@
 #else
 #define UNUSED
 #endif
-static const char UNUSED *bitcoin_strings[] = {
+static const char UNUSED *strings[] = {
 QT_TRANSLATE_NOOP("orb-core", ""
 "%s, you must set a rpcpassword in the configuration file:\n"
 " %s\n"
 "It is recommended you use the following random password:\n"
-"rpcuser=bitcoinrpc\n"
+"rpcuser=orbitcoinrpc\n"
 "rpcpassword=%s\n"
 "(you do not need to remember this password)\n"
 "If the file does not exist, create it with owner-readable-only file "
@@ -131,7 +131,7 @@ QT_TRANSLATE_NOOP("orb-core", "Prepend debug output with timestamp"),
 QT_TRANSLATE_NOOP("orb-core", "Rescan the block chain for missing wallet transactions"),
 QT_TRANSLATE_NOOP("orb-core", "Rescanning..."),
 QT_TRANSLATE_NOOP("orb-core", "Run in the background as a daemon and accept commands"),
-QT_TRANSLATE_NOOP("orb-core", "SSL options: (see the Bitcoin Wiki for SSL setup instructions)"),
+QT_TRANSLATE_NOOP("orb-core", "SSL options: (see the Orbitcoin Wiki for SSL setup instructions)"),
 QT_TRANSLATE_NOOP("orb-core", "Select the version of socks proxy to use (4-5, default: 5)"),
 QT_TRANSLATE_NOOP("orb-core", "Send command to -server or orbitcoind"),
 QT_TRANSLATE_NOOP("orb-core", "Send commands to node running on <ip> (default: 127.0.0.1)"),

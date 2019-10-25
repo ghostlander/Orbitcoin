@@ -21,4 +21,4 @@ private:
     static QString FormatTxStatus(const CWalletTx& wtx);
 };
 
-#endif // TRANSACTIONDESC_H
+#endif /* TRANSACTIONDESC_H */

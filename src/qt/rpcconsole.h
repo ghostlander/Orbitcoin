@@ -8,9 +8,8 @@ namespace Ui {
 }
 class ClientModel;
 
-/** Local Bitcoin RPC console. */
-class RPCConsole: public QDialog
-{
+/* Local Orbitcoin RPC console */
+class RPCConsole: public QDialog {
     Q_OBJECT
 
 public:
@@ -76,4 +75,4 @@ private:
     void startExecutor();
 };
 
-#endif // RPCCONSOLE_H
+#endif /* RPCCONSOLE_H */

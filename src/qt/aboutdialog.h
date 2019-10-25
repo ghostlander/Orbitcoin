@@ -25,4 +25,4 @@ private slots:
     void on_buttonBox_accepted();
 };
 
-#endif // ABOUTDIALOG_H
+#endif /* ABOUTDIALOG_H */

@@ -54,4 +54,4 @@ private:
 
 };
 
-#endif // COINCONTROL_H
+#endif /* COINCONTROL_H */

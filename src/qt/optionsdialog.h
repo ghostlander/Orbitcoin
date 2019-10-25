@@ -57,4 +57,4 @@ private:
     bool fProxyIpValid;
 };
 
-#endif // OPTIONSDIALOG_H
+#endif /* OPTIONSDIALOG_H */

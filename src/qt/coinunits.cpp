@@ -1,92 +1,82 @@
-#include "bitcoinunits.h"
+#include "coinunits.h"
 
 #include <QStringList>
 
-BitcoinUnits::BitcoinUnits(QObject *parent):
-        QAbstractListModel(parent),
-        unitlist(availableUnits())
-{
+CoinUnits::CoinUnits(QObject *parent):
+    QAbstractListModel(parent), unitlist(availableUnits()) { }
+
+QList<CoinUnits::Unit> CoinUnits::availableUnits() {
+    QList<CoinUnits::Unit> unitlist;
+    unitlist.append(ORB);
+    unitlist.append(mORB);
+    unitlist.append(uORB);
+    return(unitlist);
 }
 
-QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
-{
-    QList<BitcoinUnits::Unit> unitlist;
-    unitlist.append(BTC);
-    unitlist.append(mBTC);
-    unitlist.append(uBTC);
-    return unitlist;
-}
+bool CoinUnits::valid(int unit) {
 
-bool BitcoinUnits::valid(int unit)
-{
-    switch(unit)
-    {
-    case BTC:
-    case mBTC:
-    case uBTC:
-        return true;
-    default:
-        return false;
+    switch(unit) {
+        case(ORB):
+        case(mORB):
+        case(uORB):
+            return(true);
+        default:
+            return(false);
     }
 }
 
-QString BitcoinUnits::name(int unit)
-{
-    switch(unit)
-    {
-    case BTC: return QString("ORB");
-    case mBTC: return QString("mORB");
-    case uBTC: return QString::fromUtf8("μORB");
-    default: return QString("???");
+QString CoinUnits::name(int unit) {
+
+    switch(unit) {
+        case(ORB): return(QString("ORB"));
+        case(mORB): return(QString("mORB"));
+        case(uORB): return(QString::fromUtf8("μORB"));
+        default: return(QString("???"));
     }
 }
 
-QString BitcoinUnits::description(int unit)
-{
-    switch(unit)
-    {
-    case BTC: return QString("Orbitcoins");
-    case mBTC: return QString("Milli-Orbitcoins (1 / 1,000)");
-    case uBTC: return QString("Micro-Orbitcoins (1 / 1,000,000)");
-    default: return QString("???");
+QString CoinUnits::description(int unit) {
+
+    switch(unit) {
+        case(ORB): return(QString("Orbitcoins"));
+        case(mORB): return(QString("Milli-Orbitcoins (1 / 1,000)"));
+        case(uORB): return(QString("Micro-Orbitcoins (1 / 1,000,000)"));
+        default: return(QString("???"));
     }
 }
 
-qint64 BitcoinUnits::factor(int unit)
-{
-    switch(unit)
-    {
-    case BTC:  return 1000000;
-    case mBTC: return 1000;
-    case uBTC: return 1;
-    default:   return 1000000;
+qint64 CoinUnits::factor(int unit) {
+
+    switch(unit) {
+        case(ORB): return(1000000);
+        case(mORB): return(1000);
+        case(uORB): return(1);
+        default: return(1000000);
     }
 }
 
-int BitcoinUnits::amountDigits(int unit)
-{
-    switch(unit)
-    {
-    case BTC: return 8; // 21,000,000 (# digits, without commas)
-    case mBTC: return 11; // 21,000,000,000
-    case uBTC: return 14; // 21,000,000,000,000
-    default: return 0;
+int CoinUnits::amountDigits(int unit) {
+
+    switch(unit) {
+        case(ORB): return(8);
+        case(mORB): return(11);
+        case(uORB): return(14);
+        default: return(0);
     }
 }
 
-int BitcoinUnits::decimals(int unit)
-{
-    switch(unit)
-    {
-    case BTC: return 6;
-    case mBTC: return 3;
-    case uBTC: return 0;
-    default: return 0;
+int CoinUnits::decimals(int unit) {
+
+    switch(unit) {
+        case(ORB): return(6);
+        case(mORB): return(3);
+        case(uORB): return(0);
+        default: return(0);
     }
 }
 
-QString BitcoinUnits::format(int unit, qint64 n, bool fPlus)
-{
+QString CoinUnits::format(int unit, qint64 n, bool fPlus) {
+
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
     if(!valid(unit))
@@ -112,13 +102,12 @@ QString BitcoinUnits::format(int unit, qint64 n, bool fPlus)
     return quotient_str + QString(".") + remainder_str;
 }
 
-QString BitcoinUnits::formatWithUnit(int unit, qint64 amount, bool plussign)
-{
-    return format(unit, amount, plussign) + QString(" ") + name(unit);
+QString CoinUnits::formatWithUnit(int unit, qint64 amount, bool plussign) {
+    return(format(unit, amount, plussign) + QString(" ") + name(unit));
 }
 
-bool BitcoinUnits::parse(int unit, const QString &value, qint64 *val_out)
-{
+bool CoinUnits::parse(int unit, const QString &value, qint64 *val_out) {
+
     if(!valid(unit) || value.isEmpty())
         return false; // Refuse to parse invalid unit or empty string
     int num_decimals = decimals(unit);
@@ -154,14 +143,13 @@ bool BitcoinUnits::parse(int unit, const QString &value, qint64 *val_out)
     return ok;
 }
 
-int BitcoinUnits::rowCount(const QModelIndex &parent) const
-{
+int CoinUnits::rowCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
-    return unitlist.size();
+    return(unitlist.size());
 }
 
-QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
-{
+QVariant CoinUnits::data(const QModelIndex &index, int role) const {
+
     int row = index.row();
     if(row >= 0 && row < unitlist.size())
     {

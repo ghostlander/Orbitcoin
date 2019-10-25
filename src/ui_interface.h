@@ -2,8 +2,9 @@
 // Copyright (c) 2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_UI_INTERFACE_H
-#define BITCOIN_UI_INTERFACE_H
+
+#ifndef UI_INTERFACE_H
+#define UI_INTERFACE_H
 
 #include <string>
 #include "util.h" // for int64
@@ -102,4 +103,4 @@ inline std::string _(const char* psz)
     return rv ? (*rv) : psz;
 }
 
-#endif
+#endif /* UI_INTERFACE_H */

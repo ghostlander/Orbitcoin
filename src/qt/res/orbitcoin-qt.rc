@@ -22,7 +22,7 @@ BEGIN
             VALUE "FileDescription",    "Orbitcoin-Qt (OSS GUI client for Orbitcoin)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "Orbitcoin-qt"
-            VALUE "LegalCopyright",     "2009-2012 The Bitcoin Developers, 2012-2013 The NovaCoin & PPCoin Developers, 2013-2014 The Orbitcoin Developers"
+            VALUE "LegalCopyright",     "2009-2012 The Bitcoin Developers, 2012-2013 The NovaCoin & PPCoin Developers, 2013-2019 The Orbitcoin Developers"
             VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
             VALUE "OriginalFilename",   "orbitcoin-qt.exe"
             VALUE "ProductName",        "Orbitcoin-Qt"

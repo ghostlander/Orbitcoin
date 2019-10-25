@@ -30,4 +30,4 @@ private slots:
     void handleSelectionChanged(int idx);
 };
 
-#endif // QVALUECOMBOBOX_H
+#endif /* QVALUECOMBOBOX_H */

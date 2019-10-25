@@ -16,4 +16,4 @@
 #define STRINGIZE(X) DO_STRINGIZE(X)
 #define DO_STRINGIZE(X) #X
 
-#endif // CLIENTVERSION_H
+#endif /* CLIENTVERSION_H */

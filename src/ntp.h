@@ -1,3 +1,6 @@
+#ifndef NTP_H
+#define NTP_H
+
 extern std::string strTrustedNTP;
 extern int64 nNtpOffset;
 extern bool fNtpWarning;
@@ -10,3 +13,5 @@ int64 NtpGetTime(const std::string &strHostName);
 
 /* NTP polling thread */
 void ThreadNtpPoller(void *parg);
+
+#endif /* NTP_H */

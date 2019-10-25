@@ -2,8 +2,9 @@
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_NET_H
-#define BITCOIN_NET_H
+
+#ifndef NET_H
+#define NET_H
 
 #include <deque>
 #include <boost/array.hpp>
@@ -686,5 +687,4 @@ class CTransaction;
 void RelayTransaction(const CTransaction& tx, const uint256& hash);
 void RelayTransaction(const CTransaction& tx, const uint256& hash, const CDataStream& ss);
 
-
-#endif
+#endif /* NET_H */

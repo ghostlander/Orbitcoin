@@ -14,10 +14,10 @@ static const string strSecret1     ("9AvBrfhqRw2n8gYYNc5ekpqDbeRb6aLh31cSi4MkEZE
 static const string strSecret2     ("99Y2x91Cr3Vs7bJpAAASjPki716uJ3pjjZm6sriFZ6KsboBq49Z");
 static const string strSecret1C    ("d4mkvDqEm3UrCuYDUMqXeS7pbvBXVc9uhshSUDpZpqHRZawoyMLT");
 static const string strSecret2C    ("cxfycNKuHU2QC6Rd9RSga7RvRVT3pFThcsbewUR5EeWJLPfPzw8s");
-static const CBitcoinAddress addr1 ("oewqr2h2pQeG6tTZBY1pfU4UzssYM2jksd");
-static const CBitcoinAddress addr2 ("oMUZBTxwVCccUEzeGiAfZgbro2gdAAMSzP");
-static const CBitcoinAddress addr1C("obKPSeWeERukNfxJ4MtngaYpuWPXbM3UYg");
-static const CBitcoinAddress addr2C("oLbyeG8KwwqFiBG1bQDrroUaaPpxrzXAfV");
+static const CCoinAddress addr1 ("oewqr2h2pQeG6tTZBY1pfU4UzssYM2jksd");
+static const CCoinAddress addr2 ("oMUZBTxwVCccUEzeGiAfZgbro2gdAAMSzP");
+static const CCoinAddress addr1C("obKPSeWeERukNfxJ4MtngaYpuWPXbM3UYg");
+static const CCoinAddress addr2C("oLbyeG8KwwqFiBG1bQDrroUaaPpxrzXAfV");
 
 
 static const string strAddressBad("oewqr2h2pQeG6tTZBY1pfU4UzssYM2jksc");
@@ -38,14 +38,14 @@ void dumpKeyInfo(uint256 privkey)
     {
         bool fCompressed = nCompressed == 1;
         printf("  * %s:\n", fCompressed ? "compressed" : "uncompressed");
-        CBitcoinSecret bsecret;
+        CCoinSecret bsecret;
         bsecret.SetSecret(secret, fCompressed);
         printf("    * secret (base58): %s\n", bsecret.ToString().c_str());
         CKey key;
         key.SetSecret(secret, fCompressed);
         vector<unsigned char> vchPubKey = key.GetPubKey();
         printf("    * pubkey (hex): %s\n", HexStr(vchPubKey).c_str());
-        printf("    * address (base58): %s\n", CBitcoinAddress(vchPubKey).ToString().c_str());
+        printf("    * address (base58): %s\n", CCoinAddress(vchPubKey).ToString().c_str());
     }
 }
 #endif
@@ -53,9 +53,8 @@ void dumpKeyInfo(uint256 privkey)
 
 BOOST_AUTO_TEST_SUITE(key_tests)
 
-BOOST_AUTO_TEST_CASE(key_test1)
-{
-    CBitcoinSecret bsecret1, bsecret2, bsecret1C, bsecret2C, baddress1;
+BOOST_AUTO_TEST_CASE(key_test1) {
+    CCoinSecret bsecret1, bsecret2, bsecret1C, bsecret2C, baddress1;
     BOOST_CHECK( bsecret1.SetString (strSecret1));
     BOOST_CHECK( bsecret2.SetString (strSecret2));
     BOOST_CHECK( bsecret1C.SetString(strSecret1C));

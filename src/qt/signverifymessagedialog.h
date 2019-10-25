@@ -46,4 +46,4 @@ private slots:
     void on_clearButton_VM_clicked();
 };
 
-#endif // SIGNVERIFYMESSAGEDIALOG_H
+#endif /* SIGNVERIFYMESSAGEDIALOG_H */

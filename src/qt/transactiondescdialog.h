@@ -23,4 +23,4 @@ private:
     Ui::TransactionDescDialog *ui;
 };
 
-#endif // TRANSACTIONDESCDIALOG_H
+#endif /* TRANSACTIONDESCDIALOG_H */

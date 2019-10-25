@@ -6,7 +6,7 @@
 #include <boost/assign/list_of.hpp>
 
 #include "base58.h"
-#include "bitcoinrpc.h"
+#include "rpc.h"
 #include "db.h"
 #include "init.h"
 #include "main.h"
@@ -39,8 +39,9 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeH
     out.push_back(Pair("type", GetTxnOutputType(type)));
 
     Array a;
-    BOOST_FOREACH(const CTxDestination& addr, addresses)
-        a.push_back(CBitcoinAddress(addr).ToString());
+    BOOST_FOREACH(const CTxDestination &addr, addresses) {
+        a.push_back(CCoinAddress(addr).ToString());
+    }
     out.push_back(Pair("addresses", a));
 }
 
@@ -162,17 +163,19 @@ Value listunspent(const Array& params, bool fHelp)
     if (params.size() > 1)
         nMaxDepth = params[1].get_int();
 
-    set<CBitcoinAddress> setAddress;
-    if (params.size() > 2)
-    {
+    set<CCoinAddress> setAddress;
+    if(params.size() > 2) {
         Array inputs = params[2].get_array();
-        BOOST_FOREACH(Value& input, inputs)
-        {
-            CBitcoinAddress address(input.get_str());
-            if (!address.IsValid())
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Orbitcoin address: ")+input.get_str());
-            if (setAddress.count(address))
-                throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+input.get_str());
+        BOOST_FOREACH(Value &input, inputs) {
+            CCoinAddress address(input.get_str());
+            if(!address.IsValid()) {
+                throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
+                  string("Invalid Orbitcoin address: ") + input.get_str()));
+            }
+            if(setAddress.count(address)) {
+                throw(JSONRPCError(RPC_INVALID_PARAMETER,
+                  string("Invalid parameter, duplicated address: ") + input.get_str()));
+           }
            setAddress.insert(address);
         }
     }
@@ -201,10 +204,9 @@ Value listunspent(const Array& params, bool fHelp)
         entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));
         entry.push_back(Pair("vout", out.i));
         CTxDestination address;
-        if (ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
-        {
-            entry.push_back(Pair("address", CBitcoinAddress(address).ToString()));
-            if (pwalletMain->mapAddressBook.count(address))
+        if(ExtractDestination(out.tx->vout[out.i].scriptPubKey, address)) {
+            entry.push_back(Pair("address", CCoinAddress(address).ToString()));
+            if(pwalletMain->mapAddressBook.count(address))
                 entry.push_back(Pair("account", pwalletMain->mapAddressBook[address]));
         }
         entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
@@ -236,8 +238,8 @@ Value decodescript(const Array& params, bool fHelp)
     }
     ScriptPubKeyToJSON(script, r, false);
 
-    r.push_back(Pair("p2sh", CBitcoinAddress(script.GetID()).ToString()));
-    return r;
+    r.push_back(Pair("p2sh", CCoinAddress(script.GetID()).ToString()));
+    return(r);
 }
 
 Value createrawtransaction(const Array& params, bool fHelp)
@@ -281,15 +283,20 @@ Value createrawtransaction(const Array& params, bool fHelp)
         rawTx.vin.push_back(in);
     }
 
-    set<CBitcoinAddress> setAddress;
-    BOOST_FOREACH(const Pair& s, sendTo)
-    {
-        CBitcoinAddress address(s.name_);
-        if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+s.name_);
+    set<CCoinAddress> setAddress;
+    BOOST_FOREACH(const Pair& s, sendTo) {
+        CCoinAddress address(s.name_);
 
-        if (setAddress.count(address))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
+        if(!address.IsValid()) {
+            throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
+              string("Invalid Orbitcoin address: ") + s.name_));
+        }
+
+        if(setAddress.count(address)) {
+            throw(JSONRPCError(RPC_INVALID_PARAMETER,
+              string("Invalid parameter, duplicated address: ") + s.name_));
+        }
+
         setAddress.insert(address);
 
         CScript scriptPubKey;
@@ -441,12 +448,11 @@ Value signrawtransaction(const Array& params, bool fHelp)
     {
         fGivenKeys = true;
         Array keys = params[2].get_array();
-        BOOST_FOREACH(Value k, keys)
-        {
-            CBitcoinSecret vchSecret;
+        BOOST_FOREACH(Value k, keys) {
+            CCoinSecret vchSecret;
             bool fGood = vchSecret.SetString(k.get_str());
-            if (!fGood)
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,"Invalid private key");
+            if(!fGood)
+              throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,"Invalid private key"));
             CKey key;
             bool fCompressed;
             CSecret secret = vchSecret.GetSecret(fCompressed);

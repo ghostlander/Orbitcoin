@@ -6,7 +6,7 @@
 #include <fstream>
 
 #include "init.h" // for pwalletMain
-#include "bitcoinrpc.h"
+#include "rpc.h"
 #include "ui_interface.h"
 #include "base58.h"
 
@@ -52,7 +52,7 @@ Value importprivkey(const Array& params, bool fHelp) {
     if(params.size() > 2)
       fRescan = params[2].get_bool();
 
-    CBitcoinSecret vchSecret;
+    CCoinSecret vchSecret;
     bool fGood = vchSecret.SetString(strSecret);
 
     if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
@@ -100,7 +100,7 @@ Value importaddress(const Array &params, bool fHelp) {
       fRescan = params[2].get_bool();
 
     CScript script;
-    CBitcoinAddress addr;
+    CCoinAddress addr;
 
     if(IsHex(params[0].get_str())) {
         std::vector<uchar> vchScriptPubKey(ParseHex(params[0].get_str()));
@@ -115,10 +115,10 @@ Value importaddress(const Array &params, bool fHelp) {
         strTemp.insert(0, prefix);
         /* Convert and encode */
         std::vector<uchar> vchTemp(ParseHex(strTemp));
-        addr = CBitcoinAddress(EncodeBase58Check(vchTemp));
+        addr = CCoinAddress(EncodeBase58Check(vchTemp));
     } else {
         CKeyID keyID;
-        addr = CBitcoinAddress(params[0].get_str());
+        addr = CCoinAddress(params[0].get_str());
         if(!addr.GetKeyID(keyID))
           throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address"));
         script = GetScriptForPubKeyHash(keyID);
@@ -168,7 +168,7 @@ Value importpubkey(const Array &params, bool fHelp) {
       fRescan = params[2].get_bool();
 
     CScript script;
-    CBitcoinAddress addr(params[0].get_str());
+    CCoinAddress addr(params[0].get_str());
 
     if(!IsHex(params[0].get_str()))
       throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Hex string expected for public key"));
@@ -178,7 +178,7 @@ Value importpubkey(const Array &params, bool fHelp) {
       throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid public key"));
 
     CKeyID keyID = pubKey.GetID();
-    addr = CBitcoinAddress(keyID);
+    addr = CCoinAddress(keyID);
     script = GetScriptForPubKeyHash(keyID);
 
     {
@@ -238,18 +238,22 @@ Value dumpprivkey(const Array& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     string strAddress = params[0].get_str();
-    CBitcoinAddress address;
-    if (!address.SetString(strAddress))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Orbitcoin address");
+    CCoinAddress address;
+    if(!address.SetString(strAddress))
+      throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Orbitcoin address"));
 
     CKeyID keyID;
-    if (!address.GetKeyID(keyID))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+    if(!address.GetKeyID(keyID))
+      throw(JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key"));
+
     CSecret vchSecret;
     bool fCompressed;
-    if (!pwalletMain->GetSecret(keyID, vchSecret, fCompressed))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
-    return CBitcoinSecret(vchSecret, fCompressed).ToString();
+    if(!pwalletMain->GetSecret(keyID, vchSecret, fCompressed)) {
+        throw(JSONRPCError(RPC_WALLET_ERROR, "Private key for address " +
+          strAddress + " is not known"));
+    }
+
+    return(CCoinSecret(vchSecret, fCompressed).ToString());
 }
 
 Value dumpwallet(const Array& params, bool fHelp)

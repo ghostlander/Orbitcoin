@@ -26,6 +26,4 @@ signals:
 
 };
 
-
-
-#endif // MONITOREDDATAMAPPER_H
+#endif /* MONITOREDDATAMAPPER_H */

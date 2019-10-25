@@ -40,4 +40,4 @@ private:
     ClientModel *clientModel;
 };
 
-#endif // TRAFFICGRAPHWIDGET_H
+#endif /* TRAFFICGRAPHWIDGET_H */

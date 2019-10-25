@@ -1,7 +1,7 @@
 /*
  * W.J. van der Laan 2011-2012
  */
-#include "bitcoingui.h"
+#include "gui.h"
 #include "clientmodel.h"
 #include "walletmodel.h"
 #include "optionsmodel.h"
@@ -23,8 +23,8 @@
 #include <QTextCodec>
 #endif
 
-#if defined(BITCOIN_NEED_QT_PLUGINS) && !defined(_BITCOIN_QT_PLUGINS_INCLUDED)
-#define _BITCOIN_QT_PLUGINS_INCLUDED
+#if defined(NEED_QT_PLUGINS) && !defined(_QT_PLUGINS_INCLUDED)
+#define _QT_PLUGINS_INCLUDED
 #define __INSURE__
 #include <QtPlugin>
 Q_IMPORT_PLUGIN(qcncodecs)
@@ -35,7 +35,7 @@ Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 #endif
 
 // Need a global reference for the notifications to find the GUI
-static BitcoinGUI *guiref;
+static GUI *guiref;
 static QSplashScreen *splashref;
 
 static void ThreadSafeMessageBox(const std::string& message, const std::string& caption, int style)
@@ -106,14 +106,15 @@ static std::string Translate(const char* psz)
 
 /* Handle runaway exceptions. Shows a message box with the problem and quits the program.
  */
-static void handleRunawayException(std::exception *e)
-{
+static void handleRunawayException(std::exception *e) {
     PrintExceptionContinue(e, "Runaway exception");
-    QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Orbitcoin can no longer continue safely and will quit.") + QString("\n\n") + QString::fromStdString(strMiscWarning));
+    QMessageBox::critical(0, "Runaway exception",
+      GUI::tr("A fatal error occurred. Orbitcoin can no longer continue safely and will quit.") +
+      QString("\n\n") + QString::fromStdString(strMiscWarning));
     exit(1);
 }
 
-#ifndef BITCOIN_QT_TEST
+#ifndef ORBITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
     // Do this early as we don't want to bother initializing if we are just calling IPC
@@ -125,7 +126,7 @@ int main(int argc, char *argv[])
     QTextCodec::setCodecForCStrings(QTextCodec::codecForTr());
 #endif
 
-    Q_INIT_RESOURCE(bitcoin);
+    Q_INIT_RESOURCE(orbitcoin);
     QApplication app(argc, argv);
 
     // Install global event filter that makes sure that long tooltips can be word-wrapped
@@ -134,14 +135,13 @@ int main(int argc, char *argv[])
     // Command-line options take precedence:
     ParseParameters(argc, argv);
 
-    // ... then bitcoin.conf:
-    if (!boost::filesystem::is_directory(GetDataDir(false)))
-    {
-        // This message can not be translated, as translation is not initialized yet
-        // (which not yet possible because lang=XX can be overridden in bitcoin.conf in the data directory)
+    /* ... then orbitcoin.conf */
+    if(!boost::filesystem::is_directory(GetDataDir(false))) {
+        /* This message cannot be localised yet */
         QMessageBox::critical(0, "Orbitcoin",
-                              QString("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
-        return 1;
+          QString("Error: specified data directory \"%1\" does not exist") \
+          .arg(QString::fromStdString(mapArgs["-datadir"])));
+        return(1);
     }
     ReadConfigFile(mapArgs, mapMultiArgs);
 
@@ -176,13 +176,13 @@ int main(int argc, char *argv[])
     if (qtTranslator.load("qt_" + lang_territory, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
         app.installTranslator(&qtTranslator);
 
-    // Load e.g. bitcoin_de.qm (shortcut "de" needs to be defined in bitcoin.qrc)
-    if (translatorBase.load(lang, ":/translations/"))
-        app.installTranslator(&translatorBase);
+    /* Load e.g. orbitcoin_de.qm (shortcut "de" needs to be defined in orbitcoin.qrc) */
+    if(translatorBase.load(lang, ":/translations/"))
+      app.installTranslator(&translatorBase);
 
-    // Load e.g. bitcoin_de_DE.qm (shortcut "de_DE" needs to be defined in bitcoin.qrc)
-    if (translator.load(lang_territory, ":/translations/"))
-        app.installTranslator(&translator);
+    /* Load e.g. orbitcoin_de_DE.qm (shortcut "de_DE" needs to be defined in orbitcoin.qrc) */
+    if(translator.load(lang_territory, ":/translations/"))
+      app.installTranslator(&translator);
 
     // Subscribe to global signals from core
     uiInterface.ThreadSafeMessageBox.connect(ThreadSafeMessageBox);
@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
         if (GUIUtil::GetStartOnSystemStartup())
             GUIUtil::SetStartOnSystemStartup(true);
 
-        BitcoinGUI window;
+        GUI window;
         guiref = &window;
         if(AppInit2())
         {
@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
                 window.setWalletModel(0);
                 guiref = 0;
             }
-            // Shutdown the core and its threads, but don't exit Bitcoin-Qt here
+            /* Shutdown the core and its threads, but don't exit Orbitcoin-Qt here */
             Shutdown(NULL);
         }
         else
@@ -272,4 +272,4 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-#endif // BITCOIN_QT_TEST
+#endif /* ORBITCOIN_QT_TEST */

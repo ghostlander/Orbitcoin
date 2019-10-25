@@ -13,10 +13,10 @@ class QDateTime;
 class QTimer;
 QT_END_NAMESPACE
 
-/** Model for Bitcoin network client. */
-class ClientModel : public QObject
-{
+/* Model for Orbitcoin network client */
+class ClientModel : public QObject {
     Q_OBJECT
+
 public:
     explicit ClientModel(OptionsModel *optionsModel, QObject *parent = 0);
     ~ClientModel();
@@ -73,4 +73,4 @@ public slots:
     void updateAlert(const QString &hash, int status);
 };
 
-#endif // CLIENTMODEL_H
+#endif /* CLIENTMODEL_H */

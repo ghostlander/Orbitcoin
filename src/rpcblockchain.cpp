@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "main.h"
-#include "bitcoinrpc.h"
+#include "rpc.h"
 
 using namespace json_spirit;
 using namespace std;
@@ -15,7 +15,7 @@ extern enum Checkpoints::CPMode CheckpointsMode;
 double GetDifficulty(const CBlockIndex *blockindex) {
 
     /* The reference difficulty is 1.0 which is the lowest Bitcoin difficulty
-     * and may not match the minimal difficulty of a particular altcoin */ 
+     * and may not match the minimal difficulty of a particular altcoin */
 
     if(!blockindex && pindexBest)
       blockindex = GetPrevBlockIndex(pindexBest, 0, false);

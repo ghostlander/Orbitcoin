@@ -47,4 +47,4 @@ private:
     QString address;
 };
 
-#endif // EDITADDRESSDIALOG_H
+#endif /* EDITADDRESSDIALOG_H */

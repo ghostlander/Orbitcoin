@@ -43,4 +43,4 @@ public slots:
 
 };
 
-#endif // CSVMODELWRITER_H
+#endif /* CSVMODELWRITER_H */

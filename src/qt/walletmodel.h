@@ -30,9 +30,8 @@ public:
     qint64 amount;
 };
 
-/** Interface to Bitcoin wallet from Qt view code. */
-class WalletModel : public QObject
-{
+/* Interface to Oritcoin wallet from Qt view code */
+class WalletModel : public QObject {
     Q_OBJECT
 
 public:
@@ -191,5 +190,4 @@ signals:
     void error(const QString &title, const QString &message, bool modal);
 };
 
-
-#endif // WALLETMODEL_H
+#endif /* WALLETMODEL_H */

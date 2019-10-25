@@ -1,7 +1,7 @@
 #include "guiutil.h"
-#include "bitcoinaddressvalidator.h"
+#include "addressvalidator.h"
 #include "walletmodel.h"
-#include "bitcoinunits.h"
+#include "coinunits.h"
 #include "util.h"
 #include "init.h"
 
@@ -58,18 +58,16 @@ QString dateTimeStr(qint64 nTime)
     return dateTimeStr(QDateTime::fromTime_t((qint32)nTime));
 }
 
-QFont bitcoinAddressFont()
-{
+QFont AddressFont() {
     QFont font("Monospace");
     font.setStyleHint(QFont::TypeWriter);
-    return font;
+    return(font);
 }
 
-void setupAddressWidget(QLineEdit *widget, QWidget *parent)
-{
-    widget->setMaxLength(BitcoinAddressValidator::MaxAddressLength);
-    widget->setValidator(new BitcoinAddressValidator(parent));
-    widget->setFont(bitcoinAddressFont());
+void setupAddressWidget(QLineEdit *widget, QWidget *parent) {
+    widget->setMaxLength(AddressValidator::MaxAddressLength);
+    widget->setValidator(new AddressValidator(parent));
+    widget->setFont(AddressFont());
 }
 
 void setupAmountWidget(QLineEdit *widget, QWidget *parent)
@@ -81,11 +79,10 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
     widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
 }
 
-bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
-{
-    // Orbitcoin: check prefix
+bool parseCoinURI(const QUrl &uri, SendCoinsRecipient *out) {
+
     if(uri.scheme() != QString("orbitcoin"))
-        return false;
+      return(false);
 
     SendCoinsRecipient rv;
     rv.address = uri.path();
@@ -114,11 +111,9 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
         }
         else if (i->first == "amount")
         {
-            if(!i->second.isEmpty())
-            {
-                if(!BitcoinUnits::parse(BitcoinUnits::BTC, i->second, &rv.amount))
-                {
-                    return false;
+            if(!i->second.isEmpty()) {
+                if(!CoinUnits::parse(CoinUnits::ORB, i->second, &rv.amount)) {
+                    return(false);
                 }
             }
             fShouldReturnFalse = false;
@@ -134,18 +129,17 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
     return true;
 }
 
-bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
-{
+bool parseCoinURI(QString uri, SendCoinsRecipient *out) {
+
     // Convert orbitcoin:// to orbitcoin:
     //
     //    Cannot handle this later, because bitcoin:// will cause Qt to see the part after // as host,
     //    which will lower-case it (and thus invalidate the address).
-    if(uri.startsWith("orbitcoin://"))
-    {
+    if(uri.startsWith("orbitcoin://")) {
         uri.replace(0, 10, "orbitcoin:");
     }
     QUrl uriInstance(uri);
-    return parseBitcoinURI(uriInstance, out);
+    return(parseCoinURI(uriInstance, out));
 }
 
 QString HtmlEscape(const QString& str, bool fMultiLine) {
@@ -293,15 +287,12 @@ bool ToolTipToRichTextFilter::eventFilter(QObject *obj, QEvent *evt)
 }
 
 #ifdef WIN32
-boost::filesystem::path static StartupShortcutPath()
-{
-    return GetSpecialFolderPath(CSIDL_STARTUP) / "Orbitcoin.lnk";
+boost::filesystem::path static StartupShortcutPath() {
+    return(GetSpecialFolderPath(CSIDL_STARTUP) / "Orbitcoin.lnk");
 }
 
-bool GetStartOnSystemStartup()
-{
-    // check for Bitcoin.lnk
-    return boost::filesystem::exists(StartupShortcutPath());
+bool GetStartOnSystemStartup() {
+    return(boost::filesystem::exists(StartupShortcutPath()));
 }
 
 bool SetStartOnSystemStartup(bool fAutoStart)

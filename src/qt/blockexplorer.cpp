@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 John Doering <ghostlander@orbitcoin.org>
+ * Copyright (c) 2016-2019 John Doering <ghostlander@orbitcoin.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -171,7 +171,7 @@ void BlockExplorer::updateExplorer(bool block) {
                 if(!ExtractDestination(txout.scriptPubKey, address))
                   address = CNoDestination();
 
-                strTx.append(CBitcoinAddress(address).ToString());
+                strTx.append(CCoinAddress(address).ToString());
                 strTx.append("  ");
                 strTx.append(boost::to_string((double)txout.nValue / (double)COIN));
                 strTx.append(" ORB\n");
@@ -235,7 +235,7 @@ void BlockExplorer::updateExplorer(bool block) {
             strIn.append("-");
             strIn.append(boost::to_string(vin.prevout.n));
             strIn.append("\n");
-            strIn.append(CBitcoinAddress(address).ToString());
+            strIn.append(CCoinAddress(address).ToString());
             strIn.append("  ");
             strIn.append(boost::to_string((double)nCurrentValueIn / (double)COIN));
             strIn.append(" ORB\n\n");
@@ -256,7 +256,7 @@ void BlockExplorer::updateExplorer(bool block) {
             nCurrentValueOut = txout.nValue;
             nValueOut += nCurrentValueOut;
 
-            strOut.append(CBitcoinAddress(address).ToString());
+            strOut.append(CCoinAddress(address).ToString());
             strOut.append("  ");
             strOut.append(boost::to_string((double)nCurrentValueOut / (double)COIN));
             strOut.append(" ORB\n");

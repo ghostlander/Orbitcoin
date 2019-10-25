@@ -53,4 +53,4 @@ public slots:
 
 };
 
-#endif // TRANSACTIONFILTERPROXY_H
+#endif /* TRANSACTIONFILTERPROXY_H */

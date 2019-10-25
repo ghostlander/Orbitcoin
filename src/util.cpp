@@ -1090,8 +1090,9 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
                     map<string, vector<string> >& mapMultiSettingsRet)
 {
     boost::filesystem::ifstream streamConfig(GetConfigFile());
-    if (!streamConfig.good())
-        return; // No bitcoin.conf file is OK
+
+    /* Absence of orbitcoin.conf is acceptable */
+    if(!streamConfig.good()) return;
 
     set<string> setOptions;
     setOptions.insert("*");

@@ -228,7 +228,7 @@
         <string/>
        </property>
        <property name="pixmap">
-        <pixmap resource="../bitcoin.qrc">:/icons/orbitcoin</pixmap>
+        <pixmap resource="../orbitcoin.qrc">:/icons/orbitcoin</pixmap>
        </property>
        <property name="scaledContents">
         <bool>false</bool>
@@ -347,7 +347,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../bitcoin.qrc"/>
+  <include location="../orbitcoin.qrc"/>
  </resources>
  <connections/>
 </ui>

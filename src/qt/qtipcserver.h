@@ -1,10 +1,10 @@
 #ifndef QTIPCSERVER_H
 #define QTIPCSERVER_H
 
-// Define Bitcoin-Qt message queue name
-#define BITCOINURI_QUEUE_NAME "OrbitcoinURI"
+/* Define Orbitcoin-Qt message queue name */
+#define URI_QUEUE_NAME "OrbitcoinURI"
 
 void ipcScanRelay(int argc, char *argv[]);
 void ipcInit(int argc, char *argv[]);
 
-#endif // QTIPCSERVER_H
+#endif /* QTIPCSERVER_H */
