@@ -11,9 +11,9 @@ QT_END_NAMESPACE
 /** Export a Qt table model to a CSV file. This is useful for analyzing or post-processing the data in
     a spreadsheet.
  */
-class CSVModelWriter : public QObject
-{
+class CSVModelWriter : public QObject {
     Q_OBJECT
+
 public:
     explicit CSVModelWriter(const QString &filename, QObject *parent = 0);
 
@@ -36,11 +36,6 @@ private:
         int role;
     };
     QList<Column> columns;
-
-signals:
-
-public slots:
-
 };
 
 #endif /* CSVMODELWRITER_H */

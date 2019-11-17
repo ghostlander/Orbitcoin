@@ -46,6 +46,8 @@ namespace GUIUtil {
      */
     void copyEntryData(QAbstractItemView *view, int column, int role=Qt::EditRole);
 
+    void setClipboard(const QString &str);
+
     /** Get save filename, mimics QFileDialog::getSaveFileName, except that it appends a default suffix
         when no suffix is provided by the user.
 
@@ -77,8 +79,7 @@ namespace GUIUtil {
       representation if needed. This assures that Qt can word-wrap long tooltip messages.
       Tooltips longer than the provided size threshold (in characters) are wrapped.
      */
-    class ToolTipToRichTextFilter : public QObject
-    {
+    class ToolTipToRichTextFilter : public QObject {
         Q_OBJECT
 
     public:

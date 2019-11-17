@@ -4,10 +4,10 @@
 #include <QSortFilterProxyModel>
 #include <QDateTime>
 
-/** Filter the transaction list according to pre-specified rules. */
-class TransactionFilterProxy : public QSortFilterProxyModel
-{
+/* Filter the transaction list according to pre-specified rules */
+class TransactionFilterProxy : public QSortFilterProxyModel {
     Q_OBJECT
+
 public:
     explicit TransactionFilterProxy(QObject *parent = 0);
 
@@ -35,6 +35,7 @@ public:
     void setShowFailed(bool showFailed);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
+
 protected:
     bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
 
@@ -46,11 +47,6 @@ private:
     qint64 minAmount;
     int limitRows;
     bool showFailed;
-
-signals:
-
-public slots:
-
 };
 
 #endif /* TRANSACTIONFILTERPROXY_H */

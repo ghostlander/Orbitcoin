@@ -1,10 +1,11 @@
 #include "optionsmodel.h"
 #include "coinunits.h"
-#include <QSettings>
 
 #include "init.h"
 #include "walletdb.h"
 #include "guiutil.h"
+
+#include <QSettings>
 
 OptionsModel::OptionsModel(QObject *parent) :
     QAbstractListModel(parent)
@@ -48,6 +49,7 @@ void OptionsModel::Init()
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
     nTransactionFee = settings.value("nTransactionFee").toLongLong();
     language = settings.value("language", "").toString();
+    fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
 
     /* These are shared with Orbitcoin core;
      * command line options should override the GUI settings */
@@ -171,8 +173,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return QVariant(bitdb.GetDetach());
         case Language:
             return settings.value("language", "");
-        case CoinControlFeatures:
-            return QVariant(fCoinControlFeatures);
+        case(CoinControlFeatures):
+            return(QVariant(fCoinControlFeatures));
         default:
             return QVariant();
         }
@@ -262,11 +264,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case Language:
             settings.setValue("language", value);
             break;
-        case CoinControlFeatures: {
+        case(CoinControlFeatures):
             fCoinControlFeatures = value.toBool();
             settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
             emit coinControlFeaturesChanged(fCoinControlFeatures);
-            }
             break;
         default:
             break;
@@ -282,9 +283,8 @@ qint64 OptionsModel::getTransactionFee()
     return nTransactionFee;
 }
 
-bool OptionsModel::getCoinControlFeatures()
-{
-    return fCoinControlFeatures;
+bool OptionsModel::getCoinControlFeatures() {
+    return(fCoinControlFeatures);
 }
 
 bool OptionsModel::getMinimizeToTray()

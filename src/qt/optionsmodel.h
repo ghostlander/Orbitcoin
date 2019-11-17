@@ -9,8 +9,7 @@
    This can be changed to a tree once the settings become sufficiently
    complex.
  */
-class OptionsModel : public QAbstractListModel
-{
+class OptionsModel : public QAbstractListModel {
     Q_OBJECT
 
 public:
@@ -30,7 +29,7 @@ public:
         DisplayAddresses,  // bool
         DetachDatabases,   // bool
         Language,          // QString
-        CoinControlFeatures, // bool
+        CoinControlFeatures, /* bool */
         OptionIDRowCount,
     };
 
@@ -49,16 +48,16 @@ public:
     bool getMinimizeOnClose();
     int getDisplayUnit();
     bool getDisplayAddresses();
-    bool getCoinControlFeatures();
     QString getLanguage() { return language; }
+    bool getCoinControlFeatures();
 
 private:
     int nDisplayUnit;
     bool bDisplayAddresses;
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
-    bool fCoinControlFeatures;
     QString language;
+    bool fCoinControlFeatures;
 
 signals:
     void displayUnitChanged(int unit);

@@ -10,6 +10,7 @@ namespace Ui {
 class WalletModel;
 class SendCoinsEntry;
 class SendCoinsRecipient;
+class OptionsModel;
 
 QT_BEGIN_NAMESPACE
 class QUrl;
@@ -29,6 +30,7 @@ public:
      */
     QWidget *setupTabChain(QWidget *prev);
 
+    void setAddress(const QString &address);
     void pasteEntry(const SendCoinsRecipient &rv);
     bool handleURI(const QString &uri);
 
@@ -47,7 +49,7 @@ private:
 
 private slots:
     void on_sendButton_clicked();
-    void removeEntry(SendCoinsEntry* entry);
+    void removeEntry(SendCoinsEntry *entry);
     void updateDisplayUnit();
     void coinControlFeatureChanged(bool);
     void coinControlButtonClicked();
@@ -57,11 +59,15 @@ private slots:
     void coinControlClipboardQuantity();
     void coinControlClipboardAmount();
     void coinControlClipboardFee();
-    void coinControlClipboardAfterFee();
+    void coinControlClipboardNetAmount();
     void coinControlClipboardBytes();
     void coinControlClipboardPriority();
     void coinControlClipboardLowOutput();
     void coinControlClipboardChange();
+
+signals:
+    /* Fired when a message should be reported to the user */
+    void message(const QString &title, const QString &message, unsigned int style);
 };
 
 #endif /* SENDCOINSDIALOG_H */

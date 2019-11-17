@@ -58,28 +58,37 @@ private:
     QString newAddressToSelect;
 
 private slots:
+    /* Delete the currently selected address entry */
     void on_deleteButton_clicked();
+    /* Create a new address for receiving coins and/or add a new address book entry */
     void on_newAddressButton_clicked();
-    /** Copy address of currently selected address entry to clipboard */
+    /* Copy the address of currently selected address entry to the clipboard */
     void on_copyToClipboard_clicked();
+    /* Open the sign message tab in the Sign/Verify Message dialogue with the currently selected address */
     void on_signMessage_clicked();
+    /* Open the verify message tab in the Sign/Verify Message dialogue with the currently selected address */
     void on_verifyMessage_clicked();
-    void selectionChanged();
+    /* Open a send coins dialog for the currently selected address (no button) */
+    void onSendCoins_clicked();
+    /* Generate a QR Code from the currently selected address */
     void on_showQRCode_clicked();
-    /** Spawn contextual menu (right mouse menu) for address book entry */
-    void contextualMenu(const QPoint &point);
 
-    /** Copy label of currently selected address entry to clipboard */
+    /* Copy the label of currently selected address entry to the clipboard (no button) */
     void onCopyLabelAction();
-    /** Edit currently selected address entry */
+    /* Edit the currently selected address entry (no button) */
     void onEditAction();
 
-    /** New entry/entries were added to address table */
+    /* Set button states based on the selected tab and selection */
+    void selectionChanged();
+    /* Spawn the contextual menu (right mouse menu) for the address book entry */
+    void contextualMenu(const QPoint &point);
+    /* New entry/entries were added to the address table */
     void selectNewAddress(const QModelIndex &parent, int begin, int end);
 
 signals:
     void signMessage(QString addr);
     void verifyMessage(QString addr);
+    void sendCoins(QString addr);
 };
 
 #endif /* ADDRESSBOOKDIALOG_H */

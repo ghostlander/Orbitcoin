@@ -693,13 +693,13 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line=""/>
-        <source>This transaction is oversized. It is possible to send it for a fee of %1. Are you ready to pay?</source>
-        <translation>This transaction is oversized. It is possible to send it for a fee of %1. Are you ready to pay?</translation>
+        <source>This payment is oversized. It is possible to send it for a fee of %1. Are you ready to pay?</source>
+        <translation>This payment is oversized. It is possible to send it for a fee of %1. Are you ready to pay?</translation>
     </message>
     <message>
         <location line=""/>
-        <source>Transaction fee request</source>
-        <translation>Transaction fee request</translation>
+        <source>Payment fee request</source>
+        <translation>Payment fee request</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -985,8 +985,8 @@ Address: %4
     </message>
     <message>
         <location line="-25"/>
-        <source>Copy transaction ID</source>
-        <translation type="unfinished">Copy transaction ID</translation>
+        <source>Copy payment ID</source>
+        <translation>Copy payment ID</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -2467,8 +2467,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+2"/>
-        <source>Transaction ID</source>
-        <translation>Transaction ID</translation>
+        <source>Payment ID</source>
+        <translation>Payment ID</translation>
     </message>
     <message>
         <location line=""/>
@@ -2754,8 +2754,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+1"/>
-        <source>Copy transaction ID</source>
-        <translation>Copy transaction ID</translation>
+        <source>Copy payment ID</source>
+        <translation>Copy payment ID</translation>
     </message>
     <message>
         <location line="+1"/>

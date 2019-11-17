@@ -13,7 +13,7 @@ class QDateTime;
 class QTimer;
 QT_END_NAMESPACE
 
-/* Model for Orbitcoin network client */
+/* Model for the Orbitcoin network client */
 class ClientModel : public QObject {
     Q_OBJECT
 
@@ -59,6 +59,7 @@ private:
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
+
 signals:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count, int countOfPeers);

@@ -3,9 +3,11 @@
 
 #include <QtCore/QObject>
 
+QT_BEGIN_NAMESPACE
 class QMenu;
 class QIcon;
 class QWidget;
+QT_END_NAMESPACE
 
 #ifdef __OBJC__
 @class DockIconClickEventHandler;
@@ -15,9 +17,9 @@ class DockIconClickEventHandler;
 
 /** Macintosh-specific dock icon handler.
  */
-class MacDockIconHandler : public QObject
-{
+class MacDockIconHandler : public QObject {
     Q_OBJECT
+
 public:
     ~MacDockIconHandler();
 
@@ -30,8 +32,6 @@ public:
 
 signals:
     void dockIconClicked();
-
-public slots:
 
 private:
     MacDockIconHandler();

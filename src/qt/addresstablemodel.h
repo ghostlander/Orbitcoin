@@ -11,9 +11,9 @@ class WalletModel;
 /**
    Qt model of the address book in the core. This allows views to access and modify the address book.
  */
-class AddressTableModel : public QAbstractTableModel
-{
+class AddressTableModel : public QAbstractTableModel {
     Q_OBJECT
+
 public:
     explicit AddressTableModel(CWallet *wallet, WalletModel *parent = 0);
     ~AddressTableModel();

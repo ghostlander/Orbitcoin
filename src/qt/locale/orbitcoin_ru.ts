@@ -699,12 +699,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line=""/>
-        <source>This transaction is oversized. It is possible to send it for a fee of %1. Are you ready to pay?</source>
-        <translation>Платёж превышает допустимый размер. Можно провести его с учётом комиссии в %1. Устраивает?</translation>
+        <source>This payment is oversized. It is possible to send it for a fee of %1. Are you ready to pay?</source>
+        <translation>Платёж превышает допустимый размер. Его можно провести с %1 комиссией. Устраивает?</translation>
     </message>
     <message>
         <location line=""/>
-        <source>Transaction fee request</source>
+        <source>Payment fee request</source>
         <translation>Запрос комиссии платежа</translation>
     </message>
     <message>
@@ -865,8 +865,8 @@ Address: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>Copy transaction ID</source>
-        <translation type="unfinished">Скопировать ID платежа</translation>
+        <source>Copy payment ID</source>
+        <translation>Скопировать ID платежа</translation>
     </message>
     <message>
         <location line="+24"/>
@@ -2476,7 +2476,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+2"/>
-        <source>Transaction ID</source>
+        <source>Payment ID</source>
         <translation>Идентификатор платежа</translation>
     </message>
     <message>
@@ -2765,7 +2765,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+1"/>
-        <source>Copy transaction ID</source>
+        <source>Copy payment ID</source>
         <translation>Скопировать ID платежа</translation>
     </message>
     <message>

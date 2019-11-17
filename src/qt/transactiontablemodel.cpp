@@ -11,13 +11,10 @@
 #include "wallet.h"
 #include "ui_interface.h"
 
-#include <QLocale>
 #include <QList>
-#include <QColor>
 #include <QTimer>
 #include <QIcon>
 #include <QDateTime>
-#include <QtAlgorithms>
 
 // Amount column is right-aligned it contains numbers
 static int column_alignments[] = {
@@ -46,14 +43,11 @@ struct TxLessThan
 };
 
 // Private implementation
-class TransactionTablePriv
-{
+class TransactionTablePriv {
 public:
     TransactionTablePriv(CWallet *wallet, TransactionTableModel *parent):
-            wallet(wallet),
-            parent(parent)
-    {
-    }
+      wallet(wallet), parent(parent) { }
+
     CWallet *wallet;
     TransactionTableModel *parent;
 
@@ -201,17 +195,14 @@ public:
         }
     }
 
-    QString describe(TransactionRecord *rec)
-    {
+    QString describe(TransactionRecord *rec, int unit) {
         {
             LOCK(wallet->cs_wallet);
             std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
             if(mi != wallet->mapWallet.end())
-            {
-                return TransactionDesc::toHTML(wallet, mi->second);
-            }
+              return(TransactionDesc::toHTML(wallet, mi->second, unit));
         }
-        return QString("");
+        return(QString(""));
     }
 
 };
@@ -576,8 +567,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return rec->type;
     case DateRole:
         return QDateTime::fromTime_t(static_cast<uint>(rec->time));
-    case LongDescriptionRole:
-        return priv->describe(rec);
+    case(LongDescriptionRole):
+        return(priv->describe(rec, walletModel->getOptionsModel()->getDisplayUnit()));
     case AddressRole:
         return QString::fromStdString(rec->address);
     case LabelRole:

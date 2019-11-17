@@ -620,14 +620,13 @@ public:
      */
     int64 GetValueIn(CCoinsViewCache& mapInputs) const;
 
-    static bool AllowFree(double dPriority)
-    {
-        // Large (in bytes) low-priority (new, small-coin) transactions
-        // need a fee.
-        return dPriority > COIN * 180 / 250;
+    static bool AllowFree(double dPriority) {
+        /* High priority transactions are exempt of mandatory fees usually;
+         * Orbitcoin: 720 blocks per day target, priority boundary is 1 ORB day / 250 bytes */
+        return(dPriority > (COIN * 720 / 250));
     }
 
-    int64 GetMinFee(unsigned int nBytes = 0, bool fAllowFree=false, enum GetMinFee_mode mode=GMF_BLOCK) const;
+    int64 GetMinFee(uint nBytes = 0, bool fAllowFree = false, enum GetMinFee_mode mode = GMF_BLOCK) const;
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {

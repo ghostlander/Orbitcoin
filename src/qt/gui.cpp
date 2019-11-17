@@ -34,7 +34,6 @@
 #include "util.h"
 
 #include <QApplication>
-#include <QMainWindow>
 #include <QMenuBar>
 #include <QMenu>
 #include <QIcon>
@@ -43,9 +42,6 @@
 #include <QToolBar>
 #include <QStatusBar>
 #include <QLabel>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QLocale>
 #include <QMessageBox>
 #include <QProgressBar>
 #include <QStackedWidget>
@@ -53,6 +49,7 @@
 #include <QFileDialog>
 #include <QTimer>
 #include <QDragEnterEvent>
+#include <QMimeData>
 #include <QStyle>
 
 #if (QT_VERSION < 0x050000)
@@ -239,9 +236,13 @@ GUI::GUI(QWidget *parent):
     blockExplorer = new BlockExplorer(this);
     connect(explorerAction, SIGNAL(triggered()), blockExplorer, SLOT(gotoBlockExplorer()));
 
-    // Clicking on "Verify Message" in the address book sends you to the verify message tab
+    /* Clicking on "Send Coins" in the address book sends you to the send coins tab */
+    connect(addressBookPage, SIGNAL(sendCoins(QString)), this, SLOT(gotoSendCoinsPage(QString)));
+    /* Clicking on "Verify Message" in the address book opens the verify message tab
+     * in the Sign/Verify Message dialogue */
     connect(addressBookPage, SIGNAL(verifyMessage(QString)), this, SLOT(gotoVerifyMessageTab(QString)));
-    // Clicking on "Sign Message" in the receive coins page sends you to the sign message tab
+    /* Clicking on "Sign Message" in the receive coins page opens the sign message tab
+     * in the Sign/Verify Message dialogue */
     connect(receiveCoinsPage, SIGNAL(signMessage(QString)), this, SLOT(gotoSignMessageTab(QString)));
 
     /* Selecting block explorer in the transaction page menu redirects to the block explorer */ 
@@ -788,12 +789,12 @@ void GUI::closeEvent(QCloseEvent *event) {
 void GUI::askFee(qint64 nFeeRequired, bool *payFee) {
 
     QString strMessage = tr(
-      "This transaction is oversized. It is possible to send it for a fee of %1. "
+      "This payment is oversized. It is possible to send it for a fee of %1. "
       "Are you ready to pay?"
       ).arg(CoinUnits::formatWithUnit(CoinUnits::ORB, nFeeRequired));
 
     QMessageBox::StandardButton retval = QMessageBox::question(this,
-      tr("Transaction fee request"), strMessage,
+      tr("Payment fee request"), strMessage,
       QMessageBox::Yes|QMessageBox::Cancel, QMessageBox::Yes);
 
     *payFee = (retval == QMessageBox::Yes);
@@ -869,12 +870,14 @@ void GUI::gotoReceiveCoinsPage() {
     connect(exportAction, SIGNAL(triggered()), receiveCoinsPage, SLOT(exportClicked()));
 }
 
-void GUI::gotoSendCoinsPage() {
+void GUI::gotoSendCoinsPage(QString addr) {
     sendCoinsAction->setChecked(true);
     centralWidget->setCurrentWidget(sendCoinsPage);
 
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
+
+    if(!addr.isEmpty()) sendCoinsPage->setAddress(addr);
 }
 
 void GUI::gotoSignMessageTab(QString addr) {

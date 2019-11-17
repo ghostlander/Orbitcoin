@@ -23,7 +23,7 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
 
-    // This timer will be fired repeatedly to update the balance
+    /* This timer runs repeatedly while unconfirmed/immature balance is non-zero */
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
     pollTimer->start(MODEL_UPDATE_DELAY);
@@ -36,7 +36,18 @@ WalletModel::~WalletModel()
     unsubscribeFromCoreSignals();
 }
 
-qint64 WalletModel::getBalance() {
+qint64 WalletModel::getBalance(const CCoinControl *coinControl) {
+
+    if(coinControl) {
+        int64 nBalance = 0;
+        std::vector<COutput> vCoins;
+        wallet->AvailableCoins(vCoins, true, coinControl);
+        BOOST_FOREACH(const COutput &out, vCoins)
+          nBalance += out.tx->vout[out.i].nValue;   
+
+        return(nBalance);
+    }
+
     /* Available (confirmed) balance */
     return(wallet->GetBalance(0x1));
 }
@@ -56,14 +67,19 @@ qint64 WalletModel::getImmature() {
     return(wallet->GetMinted(0x7));
 }
 
-int WalletModel::getNumTransactions() const
-{
+int WalletModel::getNumTransactions() const {
     int numTransactions = 0;
+
     {
         LOCK(wallet->cs_wallet);
+
+        /* The size of mapWallet contains the number of unique transaction IDs
+         * (e.g. payments to yourself generate 2 transactions,
+         * but both share the same transaction ID) */
         numTransactions = wallet->mapWallet.size();
     }
-    return numTransactions;
+
+    return(numTransactions);
 }
 
 void WalletModel::updateStatus()
@@ -127,111 +143,104 @@ bool WalletModel::validateAddress(const QString &address) {
     return(addressParsed.IsValid());
 }
 
-WalletModel::SendCoinsReturn WalletModel::sendCoins(const QString &txcomment, const QList<SendCoinsRecipient> &recipients, const CCoinControl *coinControl)
-{
+WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction,
+   const QString &txcomment, const CCoinControl *coinControl) {
     qint64 total = 0;
-    QSet<QString> setAddress;
-    QString hex;
+    std::vector<std::pair<CScript, int64> > vecSend;
+    QList<SendCoinsRecipient> recipients = transaction.getRecipients();
 
-    if(recipients.empty())
-    {
-        return OK;
-    }
+    if(recipients.empty()) return(OK);
+
+    /* Used to detect duplicates */
+    QSet<QString> setAddress;
+    int nAddresses = 0;
 
     // Pre-check input data for validity
-    foreach(const SendCoinsRecipient &rcp, recipients)
-    {
-        if(!validateAddress(rcp.address))
-        {
-            return InvalidAddress;
-        }
-        setAddress.insert(rcp.address);
+    foreach(const SendCoinsRecipient &rcp, recipients) {
+        if(!validateAddress(rcp.address)) return(InvalidAddress);
 
-        if(rcp.amount <= 0)
-        {
-            return InvalidAmount;
-        }
+        if(rcp.amount <= 0) return(InvalidAmount);
+
+        setAddress.insert(rcp.address);
+        ++nAddresses;
+
+        CScript scriptPubKey;
+        scriptPubKey.SetDestination(CCoinAddress(rcp.address.toStdString()).Get());
+        vecSend.push_back(std::pair<CScript, int64>(scriptPubKey, rcp.amount));
+
         total += rcp.amount;
     }
 
-    if(recipients.size() > setAddress.size())
-    {
-        return DuplicateAddress;
-    }
+    if(setAddress.size() != nAddresses) return(DuplicateAddress);
 
-    int64 nBalance = 0;
-    std::vector<COutput> vCoins;
-    wallet->AvailableCoins(vCoins, true, coinControl);
+    int64 nBalance = getBalance(coinControl);
+    if(total > nBalance) return(AmountExceedsBalance);
 
-    BOOST_FOREACH(const COutput& out, vCoins)
-        nBalance += out.tx->vout[out.i].nValue;
-
-    if(total > nBalance)
-    {
-        return AmountExceedsBalance;
-    }
-
-    if((total + nTransactionFee) > nBalance)
-    {
-        return SendCoinsReturn(AmountWithFeeExceedsBalance, nTransactionFee);
+    if((total + nTransactionFee) > nBalance) {
+        transaction.setTransactionFee(nTransactionFee);
+        return(SendCoinsReturn(AmountWithFeeExceedsBalance));
     }
 
     {
         LOCK2(cs_main, wallet->cs_wallet);
 
-        // Sendmany
-        std::vector<std::pair<CScript, int64> > vecSend;
-        foreach(const SendCoinsRecipient &rcp, recipients) {
-            CScript scriptPubKey;
-            scriptPubKey.SetDestination(CCoinAddress(rcp.address.toStdString()).Get());
-            vecSend.push_back(make_pair(scriptPubKey, rcp.amount));
-        }
-
-        CWalletTx wtx;
-        CReserveKey keyChange(wallet);
+        transaction.newPossibleKeyChange(wallet);
         int64 nFeeRequired = 0;
+
+        CWalletTx *newTx = transaction.getTransaction();
+        CReserveKey *keyChange = transaction.getPossibleKeyChange();
 	std::string strTxComment = txcomment.toStdString();
 	if(!strTxComment.empty()) strTxComment = "text:" + strTxComment;
-        bool fCreated = wallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, strTxComment, coinControl);
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange,
+          nFeeRequired, strTxComment, coinControl);
+        transaction.setTransactionFee(nFeeRequired);
 
-        if(!fCreated)
-        {
-            if((total + nFeeRequired) > nBalance) // FIXME: could cause collisions in the future
-            {
-                return SendCoinsReturn(AmountWithFeeExceedsBalance, nFeeRequired);
-            }
-            return TransactionCreationFailed;
+        if(!fCreated) {
+            if((total + nFeeRequired) > nBalance)
+              return(SendCoinsReturn(AmountWithFeeExceedsBalance));
+            return(TransactionCreationFailed);
         }
-        if(!uiInterface.ThreadSafeAskFee(nFeeRequired, tr("Sending...").toStdString()))
-        {
-            return Aborted;
-        }
-        if(!wallet->CommitTransaction(wtx, keyChange))
-        {
-            return TransactionCommitFailed;
-        }
-        hex = QString::fromStdString(wtx.GetHash().GetHex());
     }
 
-    // Add addresses / update labels that we've sent to to the address book
-    foreach(const SendCoinsRecipient &rcp, recipients) {
+    return(SendCoinsReturn(OK));
+}
+
+WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &transaction) {
+    /* Store serialised transaction */
+    QByteArray transaction_array;
+
+    {
+        LOCK2(cs_main, wallet->cs_wallet);
+        CWalletTx *newTx = transaction.getTransaction();
+
+        CReserveKey *keyChange = transaction.getPossibleKeyChange();
+        if(!wallet->CommitTransaction(*newTx, *keyChange))
+          return(TransactionCommitFailed);
+
+        CTransaction *t = (CTransaction *) newTx;
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << *t;
+        transaction_array.append(&(ssTx[0]), ssTx.size());
+    }
+
+    /* Add addresses / update labels that we've sent to the address book */
+    foreach(const SendCoinsRecipient &rcp, transaction.getRecipients()) {
         std::string strAddress = rcp.address.toStdString();
         CTxDestination dest = CCoinAddress(strAddress).Get();
         std::string strLabel = rcp.label.toStdString();
+
         {
             LOCK(wallet->cs_wallet);
 
             std::map<CTxDestination, std::string>::iterator mi = wallet->mapAddressBook.find(dest);
 
-            // Check if we have a new address or an updated label
-            if (mi == wallet->mapAddressBook.end() || mi->second != strLabel)
-            {
-                wallet->SetAddressBookName(dest, strLabel);
-            }
+            /* Check if we have a new address or an updated label */
+            if((mi == wallet->mapAddressBook.end()) || (mi->second != strLabel))
+              wallet->SetAddressBookName(dest, strLabel);
         }
     }
 
-    return SendCoinsReturn(OK, 0, hex);
+    return(SendCoinsReturn(OK));
 }
 
 OptionsModel *WalletModel::getOptionsModel()
@@ -410,16 +419,15 @@ void WalletModel::UnlockContext::CopyFrom(const UnlockContext& rhs)
     rhs.relock = false;
 }
 
-bool WalletModel::getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
-{
-    return wallet->GetPubKey(address, vchPubKeyOut);   
+bool WalletModel::getPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) const {
+    return(wallet->GetPubKey(address, vchPubKeyOut));
 }
 
-// returns a list of COutputs from COutPoints
-void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs)
-{
-    BOOST_FOREACH(const COutPoint& outpoint, vOutpoints)
-    {
+/* Returns a list of COutputs from COutPoints */
+void WalletModel::getOutputs(const std::vector<COutPoint> &vOutpoints,
+  std::vector<COutput> &vOutputs) {
+
+    BOOST_FOREACH(const COutPoint &outpoint, vOutpoints) {
         if(!wallet->mapWallet.count(outpoint.hash)) continue;
         int nDepth = wallet->mapWallet[outpoint.hash].GetDepthInMainChain();
         if(nDepth < 0) continue;
@@ -428,16 +436,17 @@ void WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vect
     }
 }
 
-// AvailableCoins + LockedCoins grouped by wallet address (put change in one group with wallet address) 
-void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const
-{
+/* AvailableCoins + LockedCoins grouped by a wallet address,
+ * put change in one group with the wallet address */
+void WalletModel::listCoins(std::map<QString, std::vector<COutput> > &mapCoins) const {
     std::vector<COutput> vCoins;
     wallet->AvailableCoins(vCoins);
-    std::vector<COutPoint> vLockedCoins;
 
-    // add locked coins
-    BOOST_FOREACH(const COutPoint& outpoint, vLockedCoins)
-    {
+    std::vector<COutPoint> vLockedCoins;
+    wallet->ListLockedCoins(vLockedCoins);
+
+    /* Add locked coins */
+    BOOST_FOREACH(const COutPoint &outpoint, vLockedCoins) {
         if(!wallet->mapWallet.count(outpoint.hash)) continue;
         int nDepth = wallet->mapWallet[outpoint.hash].GetDepthInMainChain();
         if(nDepth < 0) continue;
@@ -445,14 +454,14 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
         vCoins.push_back(out);
     }
 
-    BOOST_FOREACH(const COutput& out, vCoins)
-    {
+    BOOST_FOREACH(const COutput &out, vCoins) {
         COutput cout = out;
 
-        while (wallet->IsChange(cout.tx->vout[cout.i]) && cout.tx->vin.size() > 0 && wallet->IsMine(cout.tx->vin[0]))
-        {
-            if (!wallet->mapWallet.count(cout.tx->vin[0].prevout.hash)) break;
-            cout = COutput(&wallet->mapWallet[cout.tx->vin[0].prevout.hash], cout.tx->vin[0].prevout.n, 0, true);
+        while(wallet->IsChange(cout.tx->vout[cout.i]) &&
+          (cout.tx->vin.size() > 0) && wallet->IsMine(cout.tx->vin[0])) {
+            if(!wallet->mapWallet.count(cout.tx->vin[0].prevout.hash)) break;
+            cout = COutput(&wallet->mapWallet[cout.tx->vin[0].prevout.hash],
+              cout.tx->vin[0].prevout.n, 0, true);
         }
 
         CTxDestination address;
@@ -461,22 +470,18 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
     }
 }
 
-bool WalletModel::isLockedCoin(uint256 hash, unsigned int n) const
-{
-    return false;
+bool WalletModel::isLockedCoin(uint256 hash, uint n) const {
+    return(wallet->IsLockedCoin(hash, n));
 }
 
-void WalletModel::lockCoin(COutPoint& output)
-{
-    return;
+void WalletModel::lockCoin(COutPoint &output) {
+    wallet->LockCoin(output);
 }
 
-void WalletModel::unlockCoin(COutPoint& output)
-{
-    return;
+void WalletModel::unlockCoin(COutPoint &output) {
+    wallet->UnlockCoin(output);
 }
 
-void WalletModel::listLockedCoins(std::vector<COutPoint>& vOutpts)
-{
-    return;
+void WalletModel::listLockedCoins(std::vector<COutPoint> &vOutpts) {
+    wallet->ListLockedCoins(vOutpts);
 }

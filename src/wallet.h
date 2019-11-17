@@ -66,12 +66,11 @@ public:
 /** A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
-class CWallet : public CCryptoKeyStore
-{
+class CWallet : public CCryptoKeyStore {
 private:
     bool SelectCoins(int64 nTargetValue, uint nSpendTime,
-      std::set<std::pair<const CWalletTx*, uint> >& setCoinsRet, int64& nValueRet,
-      const CCoinControl *coinControl=NULL) const;
+      std::set<std::pair<const CWalletTx *, uint> > &setCoinsRet,
+      int64 &nValueRet, const CCoinControl *coinControl = NULL) const;
 
     /* Quick cacheable selection of inputs for staking */
     bool SelectCoinsStaking(int64 nTargetValue,
@@ -129,11 +128,22 @@ public:
     CPubKey vchDefaultKey;
     int64 nTimeFirstKey;
 
+    std::set<COutPoint> setLockedCoins;
+
     // check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) { return nWalletMaxVersion >= wf; }
 
-    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl=NULL) const;
-    bool SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
+    void AvailableCoins(std::vector<COutput> &vCoins, bool fOnlyConfirmed = true,
+      const CCoinControl *coinControl = NULL) const;
+    bool SelectCoinsMinConf(int64 nTargetValue, uint nSpendTime, int nConfMine, int nConfTheirs,
+      std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx *, uint> > &setCoinsRet,
+      int64 &nValueRet) const;
+    bool IsLockedCoin(uint256 hash, uint n) const;
+    void LockCoin(COutPoint &output);
+    void UnlockCoin(COutPoint &output);
+    void UnlockAllCoins();
+    void ListLockedCoins(std::vector<COutPoint> &vOutpts);
+
     // keystore implementation
     // Generate a new key
     CPubKey GenerateNewKey();
@@ -192,8 +202,12 @@ public:
     void ResendWalletTransactions(bool fForce=false);
     int64 GetBalance(uint nSettings);
     int64 GetMinted(uint nSettings);
-    bool CreateTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string strTxComment, const CCoinControl *coinControl=NULL);
-    bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, std::string strTxComment, const CCoinControl *coinControl=NULL);
+    bool CreateTransaction(const std::vector<std::pair<CScript, int64> > &vecSend,
+      CWalletTx &wtxNew, CReserveKey &reservekey, int64 &nFeeRet, std::string strTxComment,
+      const CCoinControl *coinControl = NULL);
+    bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx &wtxNew,
+      CReserveKey &reservekey, int64 &nFeeRet, std::string strTxComment,
+      const CCoinControl *coinControl = NULL);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
     bool GetStakeWeightQuick(const int64& nTime, const int64& nValue, uint64& nWeight);
@@ -881,5 +895,49 @@ private:
 };
 
 bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
+
+
+/* The Coin Control: input and output operations */
+class CCoinControl {
+public:
+    CTxDestination destChange;
+
+    CCoinControl() {
+        SetNull();
+    }
+
+    void SetNull() {
+        destChange = CNoDestination();
+        setSelected.clear();
+    }
+
+    bool HasSelected() const {
+        return(setSelected.size() > 0);
+    }
+
+    bool IsSelected(const uint256 &hash, uint n) const {
+        COutPoint outpt(hash, n);
+        return(setSelected.count(outpt) > 0);
+    }
+
+    void Select(COutPoint &output) {
+        setSelected.insert(output);
+    }
+
+    void UnSelect(COutPoint &output) {
+        setSelected.erase(output);
+    }
+
+    void UnSelectAll() {
+        setSelected.clear();
+    }
+
+    void ListSelected(std::vector<COutPoint> &vOutpoints) {
+        vOutpoints.assign(setSelected.begin(), setSelected.end());
+    }
+
+private:
+    std::set<COutPoint> setSelected;
+};
 
 #endif /* WALLET_H */

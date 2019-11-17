@@ -1,9 +1,10 @@
-#ifndef COINCONTROLDIALOG_H
-#define COINCONTROLDIALOG_H
+#ifndef COINCONTROL_H
+#define COINCONTROL_H
 
 #include <QAbstractButton>
 #include <QAction>
 #include <QDialog>
+#include <QKeyEvent>
 #include <QList>
 #include <QMenu>
 #include <QPoint>
@@ -11,30 +12,30 @@
 #include <QTreeWidgetItem>
 
 namespace Ui {
-    class CoinControlDialog;
+    class CoinControl;
 }
+
 class WalletModel;
 class CCoinControl;
 
-class CoinControlDialog : public QDialog
-{
+class CoinControl : public QDialog {
     Q_OBJECT
 
 public:
-    explicit CoinControlDialog(QWidget *parent = 0);
-    ~CoinControlDialog();
+    explicit CoinControl(QWidget *parent = 0);
+    ~CoinControl();
 
     void setModel(WalletModel *model);
 
-    // static because also called from sendcoinsdialog
-    static void updateLabels(WalletModel*, QDialog*);
+    /* static because also called from sendcoinsdialog */
+    static void updateLabels(WalletModel *, QDialog *);
     static QString getPriorityLabel(double);
 
     static QList<qint64> payAmounts;
-    static CCoinControl *coinControl;
+    static CCoinControl *control;
 
 private:
-    Ui::CoinControlDialog *ui;
+    Ui::CoinControl *ui;
     WalletModel *model;
     int sortColumn;
     Qt::SortOrder sortOrder;
@@ -72,17 +73,27 @@ private slots:
     void clipboardQuantity();
     void clipboardAmount();
     void clipboardFee();
-    void clipboardAfterFee();
+    void clipboardNetAmount();
     void clipboardBytes();
     void clipboardPriority();
     void clipboardLowOutput();
     void clipboardChange();
     void radioTreeMode(bool);
     void radioListMode(bool);
-    void viewItemChanged(QTreeWidgetItem*, int);
+    void viewItemChanged(QTreeWidgetItem *, int);
     void headerSectionClicked(int);
-    void buttonBoxClicked(QAbstractButton*);
+    void buttonBoxClicked(QAbstractButton *);
     void buttonSelectAllClicked();
 };
 
-#endif /* COINCONTROLDIALOG_H */
+class CoinControlTreeWidget : public QTreeWidget {
+    Q_OBJECT
+
+public:
+    explicit CoinControlTreeWidget(QWidget *parent = 0);
+
+protected:
+    virtual void keyPressEvent(QKeyEvent *event);
+};
+
+#endif /* COINCONTROL_H */

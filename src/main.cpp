@@ -625,14 +625,13 @@ bool CTransaction::CheckTransaction() const
     return true;
 }
 
-int64 CTransaction::GetMinFee(unsigned int nBytes, bool fAllowFree,
-                              enum GetMinFee_mode mode) const
-{
+int64 CTransaction::GetMinFee(uint nBytes, bool fAllowFree,
+  enum GetMinFee_mode mode) const {
+
     // Base fee is either MIN_TX_FEE or MIN_RELAY_TX_FEE
     int64 nBaseFee = (mode == GMF_RELAY) ? MIN_RELAY_TX_FEE : MIN_TX_FEE;
 
-    unsigned int nNewBlockSize = (mode == GMF_SEND) ? nBytes : 1000 + nBytes;
-    // Add a base fee per every 1000 bytes of transaction data
+    uint nNewBlockSize = (mode == GMF_SEND) ? nBytes : 1000 + nBytes;
     int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
 
     if(fAllowFree) {
@@ -647,12 +646,12 @@ int64 CTransaction::GetMinFee(unsigned int nBytes, bool fAllowFree,
     }
 
     // Dust spam filter: require a base fee for any micro output
-    BOOST_FOREACH(const CTxOut& txout, vout)
+    BOOST_FOREACH(const CTxOut &txout, vout)
       if(txout.nValue < TX_DUST) nMinFee += nBaseFee;
 
     // Raise the price as the block approaches full
-    if((mode != GMF_SEND) && (nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)) {
-        if(nNewBlockSize >= MAX_BLOCK_SIZE_GEN) return MAX_MONEY;
+    if((mode != GMF_SEND) && (nNewBlockSize >= MAX_BLOCK_SIZE_GEN / 2)) {
+        if(nNewBlockSize >= MAX_BLOCK_SIZE_GEN) return(MAX_MONEY);
         nMinFee *= MAX_BLOCK_SIZE_GEN / (MAX_BLOCK_SIZE_GEN - nNewBlockSize);
         if(!MoneyRange(nMinFee)) nMinFee = MAX_MONEY;
     }

@@ -13,9 +13,9 @@ class QDBusInterface;
 QT_END_NAMESPACE
 
 /** Cross-platform desktop notification client. */
-class Notificator: public QObject
-{
+class Notificator: public QObject {
     Q_OBJECT
+
 public:
     /** Create a new notificator.
        @note Ownership of trayIcon is not transferred to this object.
@@ -32,7 +32,6 @@ public:
     };
 
 public slots:
-
     /** Show notification message.
        @param[in] cls    general message class
        @param[in] title  title shown with message

@@ -154,8 +154,7 @@ HEADERS += src/qt/gui.h \
     src/qt/transactiontablemodel.h \
     src/qt/addresstablemodel.h \
     src/qt/optionsdialog.h \
-    src/qt/coincontroldialog.h \
-    src/qt/coincontroltreewidget.h \
+    src/qt/coincontrol.h \
     src/qt/sendcoinsdialog.h \
     src/qt/addressbookpage.h \
     src/qt/signverifymessagedialog.h \
@@ -168,7 +167,6 @@ HEADERS += src/qt/gui.h \
     src/bignum.h \
     src/checkpoints.h \
     src/compat.h \
-    src/coincontrol.h \
     src/sync.h \
     src/util.h \
     src/uint256.h \
@@ -214,6 +212,7 @@ HEADERS += src/qt/gui.h \
     src/qt/transactionfilterproxy.h \
     src/qt/transactionview.h \
     src/qt/walletmodel.h \
+    src/qt/walletmodeltransaction.h \
     src/rpc.h \
     src/qt/overviewpage.h \
     src/qt/csvmodelwriter.h \
@@ -241,8 +240,7 @@ SOURCES += src/qt/orbitcoin.cpp src/qt/gui.cpp \
     src/qt/addresstablemodel.cpp \
     src/qt/optionsdialog.cpp \
     src/qt/sendcoinsdialog.cpp \
-    src/qt/coincontroldialog.cpp \
-    src/qt/coincontroltreewidget.cpp \
+    src/qt/coincontrol.cpp \
     src/qt/addressbookpage.cpp \
     src/qt/signverifymessagedialog.cpp \
     src/qt/aboutdialog.cpp \
@@ -281,6 +279,7 @@ SOURCES += src/qt/orbitcoin.cpp src/qt/gui.cpp \
     src/qt/transactionfilterproxy.cpp \
     src/qt/transactionview.cpp \
     src/qt/walletmodel.cpp \
+    src/qt/walletmodeltransaction.cpp \
     src/rpc.cpp \
     src/rpccrypto.cpp \
     src/rpcdump.cpp \
@@ -320,7 +319,7 @@ RESOURCES += \
     src/qt/orbitcoin.qrc
 
 FORMS += \
-    src/qt/forms/coincontroldialog.ui \
+    src/qt/forms/coincontrol.ui \
     src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/addressbookpage.ui \
     src/qt/forms/signverifymessagedialog.ui \

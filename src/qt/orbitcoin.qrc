@@ -1,4 +1,4 @@
-<RCC>
+<!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/icons">
         <file alias="orbitcoin">res/icons/orbitcoin.png</file>
         <file alias="toolbar">res/icons/toolbar.png</file>
