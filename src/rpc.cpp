@@ -14,7 +14,11 @@
 #undef printf
 #include <boost/asio.hpp>
 #include <boost/asio/ip/v6_only.hpp>
+#if (BOOST_VERSION >= 107100)
+#include <boost/bind/bind.hpp>
+#else
 #include <boost/bind.hpp>
+#endif
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/iostreams/concepts.hpp>
