@@ -59,24 +59,24 @@ private:
 
 private slots:
     /* Delete the currently selected address entry */
-    void on_deleteButton_clicked();
+    void on_deleteAddress_clicked();
     /* Create a new address for receiving coins and/or add a new address book entry */
-    void on_newAddressButton_clicked();
+    void on_newAddress_clicked();
     /* Copy the address of currently selected address entry to the clipboard */
-    void on_copyToClipboard_clicked();
+    void on_copyAddress_clicked();
     /* Open the sign message tab in the Sign/Verify Message dialogue with the currently selected address */
     void on_signMessage_clicked();
     /* Open the verify message tab in the Sign/Verify Message dialogue with the currently selected address */
     void on_verifyMessage_clicked();
     /* Open a send coins dialog for the currently selected address (no button) */
-    void onSendCoins_clicked();
+    void onSendCoinsAction();
     /* Generate a QR Code from the currently selected address */
     void on_showQRCode_clicked();
 
     /* Copy the label of currently selected address entry to the clipboard (no button) */
     void onCopyLabelAction();
-    /* Edit the currently selected address entry (no button) */
-    void onEditAction();
+    /* Rename the label of currently selected address entry (no button) */
+    void onRenameLabelAction();
 
     /* Set button states based on the selected tab and selection */
     void selectionChanged();

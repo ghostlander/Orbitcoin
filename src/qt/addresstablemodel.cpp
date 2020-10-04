@@ -68,6 +68,9 @@ public:
                                   QString::fromStdString(address.ToString())));
             }
         }
+
+        /* qLowerBound() and qUpperBound() require cachedAddressTable list to be sorted in ascending order */
+        qSort(cachedAddressTable.begin(), cachedAddressTable.end(), AddressTableEntryLessThan());
     }
 
     void updateEntry(const QString &address, const QString &label, bool isMine, int status)
@@ -206,11 +209,11 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-bool AddressTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
-{
-    if(!index.isValid())
-        return false;
-    AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
+bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value, int role) {
+
+    if(!index.isValid()) return(false);
+
+    AddressTableEntry *rec = static_cast<AddressTableEntry *>(index.internalPointer());
 
     editStatus = OK;
 
@@ -219,19 +222,35 @@ bool AddressTableModel::setData(const QModelIndex & index, const QVariant & valu
         switch(index.column()) {
 
             case(Label):
+                /* Do nothing if old and new labels match */
+                if(rec->label == value.toString()) {
+                    editStatus = NO_CHANGES;
+                    return(false);
+                }
                 wallet->SetAddressBookName(CCoinAddress(rec->address.toStdString()).Get(),
                   value.toString().toStdString());
-                rec->label = value.toString();
                 break;
 
             case(Address):
+                /* Do nothing if old and new addresses match */
+                if(CCoinAddress(rec->address.toStdString()) ==
+                  CCoinAddress(value.toString().toStdString())) {
+                    editStatus = NO_CHANGES;
+                    return(false);
+                }
                 /* Refuse to set an invalid address, set error status and return false */
-                if(!walletModel->validateAddress(value.toString())) {
+                else if(!walletModel->validateAddress(value.toString())) {
                     editStatus = INVALID_ADDRESS;
                     return(false);
                 }
+                /* Check for duplicate addresses to prevent accidental deletion of addresses,
+                 * if you try to paste an existing address over another address with a different label */
+                else if(wallet->mapAddressBook.count(CCoinAddress(value.toString().toStdString()).Get())) {
+                    editStatus = DUPLICATE_ADDRESS;
+                    return(false);
+                }
                 /* Double check that we're not overwriting a receiving address */
-                if(rec->type == AddressTableEntry::Sending) {
+                else if(rec->type == AddressTableEntry::Sending) {
                     {
                         LOCK(wallet->cs_wallet);
                         /* Remove the old entry */
@@ -261,11 +280,11 @@ QVariant AddressTableModel::headerData(int section, Qt::Orientation orientation,
     return QVariant();
 }
 
-Qt::ItemFlags AddressTableModel::flags(const QModelIndex & index) const
-{
-    if(!index.isValid())
-        return 0;
-    AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
+Qt::ItemFlags AddressTableModel::flags(const QModelIndex &index) const {
+
+    if(!index.isValid()) return(0);
+
+    AddressTableEntry *rec = static_cast<AddressTableEntry *>(index.internalPointer());
 
     Qt::ItemFlags retval = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
     // Can edit address and label for sending addresses,
@@ -278,8 +297,8 @@ Qt::ItemFlags AddressTableModel::flags(const QModelIndex & index) const
     return retval;
 }
 
-QModelIndex AddressTableModel::index(int row, int column, const QModelIndex & parent) const
-{
+QModelIndex AddressTableModel::index(int row, int column, const QModelIndex &parent) const {
+
     Q_UNUSED(parent);
     AddressTableEntry *data = priv->index(row);
     if(data)
@@ -351,8 +370,8 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     return(QString::fromStdString(strAddress));
 }
 
-bool AddressTableModel::removeRows(int row, int count, const QModelIndex & parent)
-{
+bool AddressTableModel::removeRows(int row, int count, const QModelIndex &parent) {
+
     Q_UNUSED(parent);
     AddressTableEntry *rec = priv->index(row);
     if(count != 1 || !rec || rec->type == AddressTableEntry::Receiving)
