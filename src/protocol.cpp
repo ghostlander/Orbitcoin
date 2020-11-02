@@ -18,61 +18,44 @@ static const char* ppszTypeName[] =
     "block",
 };
 
-CMessageHeader::CMessageHeader()
-{
-    memcpy(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart));
-    memset(pchCommand, 0, sizeof(pchCommand));
-    pchCommand[1] = 1;
+CMessageHeader::CMessageHeader() {
+    memcpy(pchMessageStart, ::pchMessageStart, MESSAGE_START_SIZE);
+    memset(pchCommand, 0x00, COMMAND_SIZE);
     nMessageSize = -1;
     nChecksum = 0;
 }
 
-CMessageHeader::CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn)
-{
-    memcpy(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart));
-    strncpy(pchCommand, pszCommand, COMMAND_SIZE);
+CMessageHeader::CMessageHeader(const char *pszCommand, uint nMessageSizeIn) {
+    memcpy(pchMessageStart, ::pchMessageStart, MESSAGE_START_SIZE);
+    strncpy(pchCommand, pszCommand, COMMAND_SIZE - 1);
+    pchCommand[COMMAND_SIZE - 1] = 0x00;
     nMessageSize = nMessageSizeIn;
     nChecksum = 0;
 }
 
-std::string CMessageHeader::GetCommand() const
-{
-    if (pchCommand[COMMAND_SIZE-1] == 0)
-        return std::string(pchCommand, pchCommand + strlen(pchCommand));
-    else
-        return std::string(pchCommand, pchCommand + COMMAND_SIZE);
-}
+bool CMessageHeader::IsCommandValid() const {
+    uint i = 0;
+    uchar c;
 
-bool CMessageHeader::IsValid() const
-{
-    // Check start string
-    if (memcmp(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart)) != 0)
-        return false;
-
-    // Check the command string for errors
-    for (const char* p1 = pchCommand; p1 < pchCommand + COMMAND_SIZE; p1++)
-    {
-        if (*p1 == 0)
-        {
-            // Must be all zeros after the first zero
-            for (; p1 < pchCommand + COMMAND_SIZE; p1++)
-                if (*p1 != 0)
-                    return false;
-        }
-        else if (*p1 < ' ' || *p1 > 0x7E)
-            return false;
+    /* Count valid command characters ("a" to "z") until the 1st invalid */
+    while(i < COMMAND_SIZE) {
+        c = pchCommand[i];
+        if((c < 0x61) || (c > 0x7A)) break;
+        i++;
     }
 
-    // Message size
-    if (nMessageSize > MAX_SIZE)
-    {
-        printf("CMessageHeader::IsValid() : (%s, %u bytes) nMessageSize > MAX_SIZE\n", GetCommand().c_str(), nMessageSize);
-        return false;
+    /* Invalid starting character or no null termination */
+    if(!i || (i == COMMAND_SIZE)) return(false);
+
+    /* Verify null termination */
+    while(i < COMMAND_SIZE) {
+        c = pchCommand[i];
+        if(c) return(false);
+        i++;
     }
 
-    return true;
+    return(true);
 }
-
 
 
 CAddress::CAddress() : CService()

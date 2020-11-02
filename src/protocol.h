@@ -20,20 +20,24 @@ static inline unsigned short GetDefaultPort(const bool testnet = fTestNet)
 
 extern unsigned char pchMessageStart[4];
 
-/** Message header.
- * (4) message start.
- * (12) command.
- * (4) size.
- * (4) checksum.
- */
-class CMessageHeader
-{
+/* Message header
+ * (4 bytes) message start aka network magic number
+ * (12 bytes) command, null terminated
+ * (4 bytes) message size
+ * (4 bytes) message checksum */
+class CMessageHeader {
     public:
-        CMessageHeader();
-        CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn);
+        static const uint MESSAGE_START_SIZE = 4;
+        static const uint COMMAND_SIZE = 12;
+        static const uint MESSAGE_SIZE_SIZE = 4;
+        static const uint CHECKSUM_SIZE = 4;
+        static const uint MESSAGE_SIZE_OFFSET = MESSAGE_START_SIZE + COMMAND_SIZE;
+        static const uint CHECKSUM_OFFSET = MESSAGE_SIZE_OFFSET + MESSAGE_SIZE_SIZE;
 
-        std::string GetCommand() const;
-        bool IsValid() const;
+        CMessageHeader();
+        CMessageHeader(const char *pszCommand, uint nMessageSizeIn);
+
+        bool IsCommandValid() const;
 
         IMPLEMENT_SERIALIZE
             (
@@ -43,21 +47,10 @@ class CMessageHeader
              READWRITE(nChecksum);
             )
 
-    // TODO: make private (improves encapsulation)
-    public:
-        enum {
-            MESSAGE_START_SIZE=sizeof(::pchMessageStart),
-            COMMAND_SIZE=12,
-            MESSAGE_SIZE_SIZE=sizeof(int),
-            CHECKSUM_SIZE=sizeof(int),
-
-            MESSAGE_SIZE_OFFSET=MESSAGE_START_SIZE+COMMAND_SIZE,
-            CHECKSUM_OFFSET=MESSAGE_SIZE_OFFSET+MESSAGE_SIZE_SIZE
-        };
         char pchMessageStart[MESSAGE_START_SIZE];
         char pchCommand[COMMAND_SIZE];
-        unsigned int nMessageSize;
-        unsigned int nChecksum;
+        uint nMessageSize;
+        uint nChecksum;
 };
 
 /** nServices flags */

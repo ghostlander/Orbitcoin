@@ -4353,66 +4353,67 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     return true;
 }
 
-bool ProcessMessages(CNode* pfrom)
-{
-    CDataStream& vRecv = pfrom->vRecv;
-    if (vRecv.empty())
-        return true;
-    //if (fDebug)
-    //    printf("ProcessMessages(%u bytes)\n", vRecv.size());
+bool ProcessMessages(CNode *pfrom) {
 
-    //
-    // Message format
-    //  (4) message start
-    //  (12) command
-    //  (4) size
-    //  (4) checksum
-    //  (x) data
-    //
+    CDataStream &vRecv = pfrom->vRecv;
+    if(vRecv.empty()) return(true);
 
-    while (true)
-    {
+//    if(fDebug) printf("ProcessMessages(%u bytes)\n", vRecv.size());
+
+    /* Message format
+     * (4 bytes) message start aka network magic number
+     * (12 bytes) command, null terminated
+     * (4 bytes) message size
+     * (4 bytes) message checksum
+     * (X bytes) message data */
+
+    while(true) {
+
         // Don't bother if send buffer is too full to respond anyway
-        if (pfrom->vSend.size() >= SendBufferSize())
-            break;
+        if(pfrom->vSend.size() >= SendBufferSize()) break;
 
         // Scan for message start
-        CDataStream::iterator pstart = search(vRecv.begin(), vRecv.end(), BEGIN(pchMessageStart), END(pchMessageStart));
+        CDataStream::iterator pstart = search(vRecv.begin(), vRecv.end(),
+          BEGIN(pchMessageStart), END(pchMessageStart));
         int nHeaderSize = vRecv.GetSerializeSize(CMessageHeader());
-        if (vRecv.end() - pstart < nHeaderSize)
-        {
-            if ((int)vRecv.size() > nHeaderSize)
-            {
-                printf("\n\nPROCESSMESSAGE MESSAGESTART NOT FOUND\n\n");
+        if((vRecv.end() - pstart) < nHeaderSize) {
+            if((int)vRecv.size() > nHeaderSize) {
+                if(fDebug) printf("ProcessMessages(): message start not found\n");
                 vRecv.erase(vRecv.begin(), vRecv.end() - nHeaderSize);
             }
             break;
         }
-        if((pstart - vRecv.begin()) > 0)
-          printf("\n\nPROCESSMESSAGE SKIPPED %" PRIpdd " BYTES\n\n",
-            pstart - vRecv.begin());
+        if((pstart - vRecv.begin()) > 0) {
+            if(fDebug) printf("ProcessMessages(): %" PRIpdd " bytes skipped\n",
+              pstart - vRecv.begin());
+        }
         vRecv.erase(vRecv.begin(), pstart);
 
         // Read header
         vector<char> vHeaderSave(vRecv.begin(), vRecv.begin() + nHeaderSize);
         CMessageHeader hdr;
         vRecv >> hdr;
-        if (!hdr.IsValid())
-        {
-            printf("\n\nPROCESSMESSAGE: ERRORS IN HEADER %s\n\n\n", hdr.GetCommand().c_str());
+        if(!hdr.IsCommandValid()) {
+            if(fDebug) {
+                /* Dump the invalid command as a hex sequence */
+                printf("ProcessMessages(): invalid command ");
+                uint i;
+                for(i = 0; i < CMessageHeader::COMMAND_SIZE; i++) {
+                    printf("%02X", hdr.pchCommand[i]);
+                }
+                printf("\n");
+            }
             continue;
         }
-        string strCommand = hdr.GetCommand();
 
         // Message size
-        unsigned int nMessageSize = hdr.nMessageSize;
-        if (nMessageSize > MAX_SIZE)
-        {
-            printf("ProcessMessages(%s, %u bytes) : nMessageSize > MAX_SIZE\n", strCommand.c_str(), nMessageSize);
+        uint nMessageSize = hdr.nMessageSize;
+        if(nMessageSize > MAX_SIZE) {
+            if(fDebug) printf("ProcessMessages(%s): very large message %u bytes\n",
+              hdr.pchCommand, nMessageSize);
             continue;
         }
-        if (nMessageSize > vRecv.size())
-        {
+        if(nMessageSize > vRecv.size()) {
             // Rewind and wait for rest of message
             vRecv.insert(vRecv.begin(), vHeaderSave.begin(), vHeaderSave.end());
             break;
@@ -4420,12 +4421,11 @@ bool ProcessMessages(CNode* pfrom)
 
         // Checksum
         uint256 hash = Hash(vRecv.begin(), vRecv.begin() + nMessageSize);
-        unsigned int nChecksum = 0;
-        memcpy(&nChecksum, &hash, sizeof(nChecksum));
-        if (nChecksum != hdr.nChecksum)
-        {
-            printf("ProcessMessages(%s, %u bytes) : CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
-               strCommand.c_str(), nMessageSize, nChecksum, hdr.nChecksum);
+        uint nChecksum;
+        memcpy(&nChecksum, &hash, CMessageHeader::CHECKSUM_SIZE);
+        if(nChecksum != hdr.nChecksum) {
+            if(fDebug) printf("ProcessMessages(%s): checksum mismatch %08X %08X\n",
+              hdr.pchCommand, nChecksum, hdr.nChecksum);
             continue;
         }
 
@@ -4435,44 +4435,38 @@ bool ProcessMessages(CNode* pfrom)
 
         // Process message
         bool fRet = false;
-        try
-        {
+        try {
             {
                 LOCK(cs_main);
-                fRet = ProcessMessage(pfrom, strCommand, vMsg);
+                fRet = ProcessMessage(pfrom, string(hdr.pchCommand), vMsg);
             }
-            if (fShutdown)
-                return true;
-        }
-        catch (std::ios_base::failure& e)
-        {
-            if (strstr(e.what(), "end of data"))
-            {
-                // Allow exceptions from under-length message on vRecv
-                printf("ProcessMessages(%s, %u bytes) : Exception '%s' caught, normally caused by a message being shorter than its stated length\n", strCommand.c_str(), nMessageSize, e.what());
+            if(fShutdown) return(true);
+        } catch(std::ios_base::failure &e) {
+            if(strstr(e.what(), "end of data")) {
+                printf("ProcessMessages(%s, %u bytes): exception '%s' caught, "
+                  "normally caused by an undersized message\n",
+                  hdr.pchCommand, nMessageSize, e.what());
             }
-            else if (strstr(e.what(), "size too large"))
-            {
-                // Allow exceptions from over-long size
-                printf("ProcessMessages(%s, %u bytes) : Exception '%s' caught\n", strCommand.c_str(), nMessageSize, e.what());
+            else if(strstr(e.what(), "size too large")) {
+                printf("ProcessMessages(%s, %u bytes): exception '%s' caught, "
+                  "normally caused by an oversized message\n",
+                  hdr.pchCommand, nMessageSize, e.what());
             }
-            else
-            {
+            else {
                 PrintExceptionContinue(&e, "ProcessMessages()");
             }
-        }
-        catch (std::exception& e) {
+        } catch(std::exception &e) {
             PrintExceptionContinue(&e, "ProcessMessages()");
         } catch (...) {
             PrintExceptionContinue(NULL, "ProcessMessages()");
         }
 
-        if (!fRet)
-            printf("ProcessMessage(%s, %u bytes) FAILED\n", strCommand.c_str(), nMessageSize);
+        if(!fRet)
+          printf("ProcessMessages(%s, %u bytes) FAILED\n", hdr.pchCommand, nMessageSize);
     }
 
     vRecv.Compact();
-    return true;
+    return(true);
 }
 
 
