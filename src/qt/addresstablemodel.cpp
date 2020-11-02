@@ -69,17 +69,18 @@ public:
             }
         }
 
-        /* qLowerBound() and qUpperBound() require cachedAddressTable list to be sorted in ascending order */
-        qSort(cachedAddressTable.begin(), cachedAddressTable.end(), AddressTableEntryLessThan());
+        /* std::lower_bound() and std::upper_bound() require cachedAddressTable list
+         * to be sorted in ascending order */
+        std::sort(cachedAddressTable.begin(), cachedAddressTable.end(), AddressTableEntryLessThan());
     }
 
     void updateEntry(const QString &address, const QString &label, bool isMine, int status)
     {
         // Find address / label in model
-        QList<AddressTableEntry>::iterator lower = qLowerBound(
-            cachedAddressTable.begin(), cachedAddressTable.end(), address, AddressTableEntryLessThan());
-        QList<AddressTableEntry>::iterator upper = qUpperBound(
-            cachedAddressTable.begin(), cachedAddressTable.end(), address, AddressTableEntryLessThan());
+        QList<AddressTableEntry>::iterator lower = std::lower_bound(cachedAddressTable.begin(),
+          cachedAddressTable.end(), address, AddressTableEntryLessThan());
+        QList<AddressTableEntry>::iterator upper = std::upper_bound(cachedAddressTable.begin(),
+          cachedAddressTable.end(), address, AddressTableEntryLessThan());
         int lowerIndex = (lower - cachedAddressTable.begin());
         int upperIndex = (upper - cachedAddressTable.begin());
         bool inModel = (lower != upper);
@@ -282,7 +283,7 @@ QVariant AddressTableModel::headerData(int section, Qt::Orientation orientation,
 
 Qt::ItemFlags AddressTableModel::flags(const QModelIndex &index) const {
 
-    if(!index.isValid()) return(0);
+    if(!index.isValid()) return(Qt::ItemFlags());
 
     AddressTableEntry *rec = static_cast<AddressTableEntry *>(index.internalPointer());
 

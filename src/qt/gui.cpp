@@ -1109,7 +1109,7 @@ void GUI::stakeMinerToggle(bool fInitial) {
 
     if(fInitial) {
         fStakeGenInt = GetBoolArg("-stakegen", fStakeGen);
-        fStakeGenInt = ~fStakeGenInt & 0x1;
+        fStakeGenInt = !fStakeGenInt;
     }
 
     if(fStakeGenInt) {
