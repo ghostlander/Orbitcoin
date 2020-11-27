@@ -2396,8 +2396,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+0"/>
-        <source>Generated</source>
-        <translation>Сгенерировано</translation>
+        <source>generated</source>
+        <translation>сгенерировано</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2481,38 +2481,13 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line=""/>
-        <source>Generated coins must mature 200 blocks before they can be spent. Every block mined is broadcast to the network in order to be added to the block chain. If it fails to get into, its state changes to &quot;orphan&quot; and the block reward cannot be spent in the future. This may happen occasionally if another node generates a competing block at about the same time.</source>
-        <translation>Сгенерированные монеты могут быть потрачены через 200 блоков. Каждый сгенерированный блок отправляется в сеть для добавления в цепочку блоков. В случае неудачи статус изменится на «осиротевший» и награду за блок не удастся потратить в будущем. Это может произойти, если другой узел сгенерирует конкурирующий блок примерно в то же время.</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Debug information</source>
-        <translation>Отладочная информация</translation>
-    </message>
-    <message>
-        <location line="+8"/>
-        <source>Transaction</source>
-        <translation>Платёж</translation>
+        <source>Generated coins must mature before they can be spent. Every block mined is broadcast to the network in order to be added to the block chain. If it fails to get into, its state changes to &quot;orphan&quot; and the block reward becomes invalid. This may happen occasionally if another node generates a competing block at about the same time.</source>
+        <translation>Сгенерированные монеты должны созреть, прежде чем их можно будет потратить. Каждый сгенерированный блок отправляется в сеть для добавления в цепь блоков. В случае неудачи статус изменится на &#171;осиротевший&#187;, а награда за блок станет недействительна. Это может произойти, если другой узел сгенерирует конкурирующий блок примерно в то же время.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Inputs</source>
         <translation>Входы</translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>Amount</source>
-        <translation>Количество</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>true</source>
-        <translation>истина</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>false</source>
-        <translation>ложь</translation>
     </message>
     <message>
         <location line="-211"/>

@@ -2388,8 +2388,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+0"/>
-        <source>Generated</source>
-        <translation>Generated</translation>
+        <source>generated</source>
+        <translation>generated</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2472,38 +2472,13 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line=""/>
-        <source>Generated coins must mature 200 blocks before they can be spent. Every block mined is broadcast to the network in order to be added to the block chain. If it fails to get into, its state changes to &quot;orphan&quot; and the block reward cannot be spent in the future. This may happen occasionally if another node generates a competing block at about the same time.</source>
-        <translation>Generated coins must mature 200 blocks before they can be spent. Every block mined is broadcast to the network in order to be added to the block chain. If it fails to get into, its state changes to &quot;orphan&quot; and the block reward cannot be spent in the future. This may happen occasionally if another node generates a competing block at about the same time.</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Debug information</source>
-        <translation>Debug information</translation>
-    </message>
-    <message>
-        <location line="+8"/>
-        <source>Transaction</source>
-        <translation>Transaction</translation>
+        <source>Generated coins must mature before they can be spent. Every block mined is broadcast to the network in order to be added to the block chain. If it fails to get into, its state changes to &quot;orphan&quot; and the block reward becomes invalid. This may happen occasionally if another node generates a competing block at about the same time.</source>
+        <translation>Generated coins must mature before they can be spent. Every block mined is broadcast to the network in order to be added to the block chain. If it fails to get into, its state changes to &quot;orphan&quot; and the block reward becomes invalid. This may happen occasionally if another node generates a competing block at about the same time.</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>Inputs</source>
         <translation>Inputs</translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>Amount</source>
-        <translation>Amount</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>true</source>
-        <translation>true</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>false</source>
-        <translation>false</translation>
     </message>
     <message>
         <location line="-211"/>
