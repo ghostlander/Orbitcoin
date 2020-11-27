@@ -84,12 +84,13 @@ Value importprivkey(const Array& params, bool fHelp) {
 
 Value importaddress(const Array &params, bool fHelp) {
 
-    if(fHelp || (params.size() < 1) || (params.size() > 3))
-      throw(runtime_error(
-        "importaddress <address> [label] [rescan]\n"
-        "Adds a watch only (unspendable) address to your wallet.\n"
-        "P2PKH pubkey script in hex may be specified instead of the address.\n"
-        "Block chain re-scanning is off (false) by default.\n"));
+    if(fHelp || (params.size() < 1) || (params.size() > 3)) {
+        string msg =  "importaddress <address> [label] [rescan]\n"
+        "Adds a watch only (unspendable) P2PKH address to your wallet.\n"
+        "Pubkey hash or script in hex may be specified instead of the address.\n"
+        "Block chain re-scanning is off (false) by default.\n";
+        throw(runtime_error(msg));
+    }
 
     string strLabel = "";
     if(params.size() > 1)
@@ -104,14 +105,31 @@ Value importaddress(const Array &params, bool fHelp) {
 
     if(IsHex(params[0].get_str())) {
         std::vector<uchar> vchScriptPubKey(ParseHex(params[0].get_str()));
-        if(vchScriptPubKey.size() != 25)
-          throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid P2PKH pubkey script"));
+        std::string strTemp;
+        if(vchScriptPubKey.size() == 20) {
+            /* 20-byte pubkey hash assumed;
+             * <pubKeyHash> = RIPEMD160(SHA256(pubKey))
+             * Example using OpenSSL:
+             * echo -n <pubKey> | xxd -r -p | openssl dgst -sha256 -binary | openssl dgst -rmd160
+             * Convert to 25-byte script:
+             * OP_DUP OP_HASH160 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG */
+            strTemp = std::string(vchScriptPubKey.begin(), vchScriptPubKey.end());
+            const uchar begin[] = { 0x76, 0xA9, 0x14 };
+            const uchar end[] = { 0x88, 0xAC };
+            vchScriptPubKey.insert(vchScriptPubKey.begin(), begin, begin + 3);
+            vchScriptPubKey.insert(vchScriptPubKey.end(), end, end + 2);
+        } else if(vchScriptPubKey.size() == 25) {
+            /* Copy the public key hash */
+            strTemp = params[0].get_str().substr(6, 40);
+        } else {
+            throw(JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid pubkey hash or script"));
+        }
         script = CScript(vchScriptPubKey.begin(), vchScriptPubKey.end());
-        /* Copy the public key hash */
-        std::string strTemp = params[0].get_str().substr(6, 40);
         /* Insert the Base58 prefix */
-        char prefix[1];
-        sprintf(prefix, "%x", fTestNet ? PUBKEY_ADDRESS_TEST_PREFIX : PUBKEY_ADDRESS_PREFIX);
+        char prefix[2];
+        if(fTestNet) prefix[0] = PUBKEY_ADDRESS_TEST_PREFIX;
+        else prefix[0] = PUBKEY_ADDRESS_PREFIX;
+        prefix[1] = 0x00;
         strTemp.insert(0, prefix);
         /* Convert and encode */
         std::vector<uchar> vchTemp(ParseHex(strTemp));
