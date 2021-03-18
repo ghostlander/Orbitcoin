@@ -312,6 +312,30 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2_Display">
          <item>
+          <widget class="QLabel" name="styleLabel">
+           <property name="text">
+            <string>User interface &amp;style:</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>style</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QValueComboBox" name="style">
+           <property name="toolTip">
+            <string>Choose how your wallet should look like. This setting will take effect after restart.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3_Display">
+         <item>
           <widget class="QLabel" name="unitLabel">
            <property name="text">
             <string>&amp;Unit to show amounts in:</string>

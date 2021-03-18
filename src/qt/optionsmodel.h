@@ -3,6 +3,8 @@
 
 #include <QAbstractListModel>
 
+extern int nQtStyle;
+
 /* Interface from Qt to configuration data structure for Orbitcoin client.
    To Qt, the options are presented as a list with the different options
    laid out vertically.
@@ -30,6 +32,7 @@ public:
         DetachDatabases,   // bool
         Language,          // QString
         CoinControlFeatures, /* bool */
+        QtStyle,             /* int */
         OptionIDRowCount,
     };
 

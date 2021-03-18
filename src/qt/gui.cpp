@@ -85,74 +85,80 @@ GUI::GUI(QWidget *parent):
     QApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
 
-    int nQtStyle = GetArg("-qtstyle", 2);
-    if(nQtStyle < 0) nQtStyle = 0;
+    switch(nQtStyle) {
 
-    if(!nQtStyle) {
-        resize(850, 575);
-        qApp->setStyleSheet("QToolBar QToolButton { text-align: left; \
-          padding-left: 0px; padding-right: 0px; padding-top: 3px; padding-bottom: 3px; }");
-    } else if(nQtStyle == 1) {
-        resize(1000, 525);
+        case(1):
+            resize(850, 575);
+            qApp->setStyleSheet("QToolBar QToolButton { text-align: left; \
+              padding-left: 0px; padding-right: 0px; padding-top: 3px; padding-bottom: 3px; }");
+            break;
+
+        case(2):
+            resize(1000, 525);
 #ifndef Q_OS_MAC
-        qApp->setStyleSheet("QToolBar QToolButton { text-align: center; width: 100%; \
-          padding-left: 5px; padding-right: 5px; padding-top: 2px; padding-bottom: 2px; \
-          margin-top: 2px; } \
-          QToolBar QToolButton:hover { font-weight: bold; } \
-          #toolbar { border: none; height: 100%; min-width: 150px; max-width: 150px; } \
-          QMenuBar { min-height: 20px; }");
+            qApp->setStyleSheet("QToolBar QToolButton { text-align: center; width: 100%; \
+              padding-left: 5px; padding-right: 5px; padding-top: 2px; padding-bottom: 2px; \
+              margin-top: 2px; } \
+              QToolBar QToolButton:hover { font-weight: bold; } \
+              #toolbar { border: none; height: 100%; min-width: 150px; max-width: 150px; } \
+              QMenuBar { min-height: 20px; }");
 #else
-        qApp->setStyleSheet("QToolBar QToolButton { text-align: center; width: 100%; \
-          padding-left: 5px; padding-right: 5px; padding-top: 2px; padding-bottom: 2px; \
-          margin-top: 2px; } \
-          QToolBar QToolButton:hover { font-weight: bold; background-color: transparent; } \
-          #toolbar { border: none; height: 100%; min-width: 150px; max-width: 150px; }");
+            qApp->setStyleSheet("QToolBar QToolButton { text-align: center; width: 100%; \
+              padding-left: 5px; padding-right: 5px; padding-top: 2px; padding-bottom: 2px; \
+              margin-top: 2px; } \
+              QToolBar QToolButton:hover { font-weight: bold; background-color: transparent; } \
+              #toolbar { border: none; height: 100%; min-width: 150px; max-width: 150px; }");
 #endif
-    } else {
-        resize(1000, 525);
+            break;
+
+        case(3):
+        default:
+            resize(1000, 525);
 #ifndef Q_OS_MAC
-        qApp->setStyleSheet("QToolBar QToolButton { text-align: center; width: 100%; \
-          color: white; background-color: darkgreen; padding-left: 5px; padding-right: 5px; \
-          padding-top: 2px; padding-bottom: 2px; margin-top: 2px; } \
-          QToolBar QToolButton:hover { font-weight: bold; \
-          background-color: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 2, \
-          stop: 0 #006400, stop: 1 #FFDF5F); } \
-          #toolbar { border: none; height: 100%; min-width: 150px; max-width: 150px; \
-          background-color: darkgreen; } \
-          QMenuBar { color: white; background-color: darkgreen; } \
-          QMenuBar::item { color: white; background-color: transparent; \
-          padding-top: 6px; padding-bottom: 6px; \
-          padding-left: 10px; padding-right: 10px; } \
-          QMenuBar::item:selected { background-color: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 2, \
-          stop: 0 #006400, stop: 1 #FFDF5F); } \
-          QMenu { border: 1px solid; color: black; background-color: ivory; } \
-          QMenu::item { background-color: transparent; } \
-          QMenu::item:disabled { color: gray; } \
-          QMenu::item:enabled:selected { color: white; background-color: green; } \
-          QMenu::separator { height: 4px; }");
+            qApp->setStyleSheet("QToolBar QToolButton { text-align: center; width: 100%; \
+              color: white; background-color: darkgreen; padding-left: 5px; padding-right: 5px; \
+              padding-top: 2px; padding-bottom: 2px; margin-top: 2px; } \
+              QToolBar QToolButton:hover { font-weight: bold; \
+              background-color: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 2, \
+              stop: 0 #006400, stop: 1 #FFDF5F); } \
+              #toolbar { border: none; height: 100%; min-width: 150px; max-width: 150px; \
+              background-color: darkgreen; } \
+              QMenuBar { color: white; background-color: darkgreen; } \
+              QMenuBar::item { color: white; background-color: transparent; \
+              padding-top: 6px; padding-bottom: 6px; \
+              padding-left: 10px; padding-right: 10px; } \
+              QMenuBar::item:selected { background-color: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 2, \
+              stop: 0 #006400, stop: 1 #FFDF5F); } \
+              QMenu { border: 1px solid; color: black; background-color: ivory; } \
+              QMenu::item { background-color: transparent; } \
+              QMenu::item:disabled { color: gray; } \
+              QMenu::item:enabled:selected { color: white; background-color: green; } \
+              QMenu::separator { height: 4px; }");
 #else
-        qApp->setStyleSheet("QToolBar QToolButton { text-align: center; width: 100%; \
-          color: white; padding-left: 5px; padding-right: 5px; \
-          padding-top: 2px; padding-bottom: 2px; margin-top: 2px; } \
-          QToolBar QToolButton:hover { font-weight: bold; \
-          background-color: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 2, \
-          stop: 0 #006400, stop: 1 #FFDF5F); } \
-          #toolbar { border: none; height: 100%; min-width: 150px; max-width: 150px; \
-          background-color: darkgreen; }");
+            qApp->setStyleSheet("QToolBar QToolButton { text-align: center; width: 100%; \
+              color: white; padding-left: 5px; padding-right: 5px; \
+              padding-top: 2px; padding-bottom: 2px; margin-top: 2px; } \
+              QToolBar QToolButton:hover { font-weight: bold; \
+              background-color: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 2, \
+              stop: 0 #006400, stop: 1 #FFDF5F); } \
+              #toolbar { border: none; height: 100%; min-width: 150px; max-width: 150px; \
+              background-color: darkgreen; }");
 #endif
+            break;
+
     }
 
     // Accept D&D of URIs
     setAcceptDrops(true);
 
     // Create actions for the toolbar, menu bar and tray/dock icon
-    createActions(nQtStyle);
+    createActions();
 
     // Create application menu bar
     createMenuBar();
 
     // Create the toolbars
-    createToolBars(nQtStyle);
+    createToolBars();
 
     // Create the tray icon (or setup the dock icon)
     createTrayIcon();
@@ -260,7 +266,7 @@ GUI::~GUI() {
 #endif
 }
 
-void GUI::createActions(int nQtStyle) {
+void GUI::createActions() {
     QActionGroup *tabGroup = new QActionGroup(this);
 
     overviewAction = new QAction(QIcon(":/icons/overview"), tr("&Overview"), this);
@@ -423,14 +429,13 @@ void GUI::createMenuBar() {
     help->addAction(aboutQtAction);
 }
 
-void GUI::createToolBars(int nQtStyle) 
-{
+void GUI::createToolBars() {
     QToolBar *toolbar = addToolBar(tr("Primary tool bar"));
     toolbar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
     toolbar->setMovable(false);
     toolbar->setIconSize(QSize(32, 32));
 
-    if(!nQtStyle) {
+    if(nQtStyle == 1) {
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     } else {
         toolbar->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);

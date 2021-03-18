@@ -117,11 +117,11 @@ private:
     int spinnerFrame;
 
     /** Create the main UI actions. */
-    void createActions(int nQtStyle);
+    void createActions();
     /** Create the menu bar and sub-menus. */
     void createMenuBar();
     /** Create the toolbars */
-    void createToolBars(int nQtStyle);
+    void createToolBars();
     /** Create system tray (notification) icon */
     void createTrayIcon();
 
